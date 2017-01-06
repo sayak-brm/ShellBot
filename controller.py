@@ -53,7 +53,7 @@ interact <id>           | Interact with client
 stop                    | Stop interacting with client
 udpflood <ip>:<port>    | UDP flood with client
 tcpflood <ip>:<port>    | TCP flood with client
-serbackdoor <web dir>   | Infects all PHP Pages with Malicious Code that will
+setbackdoor <web dir>   | Infects all PHP Pages with Malicious Code that will
                           run the ShellBot Client (if killed) again.
 rmbackdoor <web dir>    | Removes the Malicious PHP Code
   Note: Commands sent to clients must not contain semi-colons (;) wxcept when
