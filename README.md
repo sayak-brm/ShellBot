@@ -17,6 +17,7 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 ---
 
 #### Features:
+
 ##### Server:
 1. Can handle multiple connections all at once.
 1. The Controller’s connection requires a plain text password, it’s not the best security, but at-least it is better than nothing. Will be improved on in future revisions.
