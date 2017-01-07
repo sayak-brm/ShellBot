@@ -23,7 +23,7 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 1. Kicks the Controller after 5 mins. This was added just in case someone forgot his Controller on which won’t allow other controllers to connect (since the Server only accepts 1 controller at a time). TODO: Make it 5 minutes after inactivity.
 
 ##### Client:
-1. Backdooring Function. (For more info: https://github.com/dotcppfile/Serbot/releases/tag/18%2F2%2F2015)
+1. Infected PHP Backdooring Function.
 1. TCP Flood.
 1. UDP Flood.
 1. Gmail Bruteforcer. (Workaround GMail's SMTP login)
