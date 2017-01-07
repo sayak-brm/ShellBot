@@ -1,6 +1,6 @@
 # ShellBot
 
-##### The most advanced remote shell written in Python3 is here.
+##### The most advanced reverse shell written in Python3 is here.
 
 ###### Based on `dotcppfile`'s [Awrs](http://dotcppfile.wordpress.com/2014/11/03/awrs-advanced-clientserver-windowslinux-python-reverse-shell/).
 
