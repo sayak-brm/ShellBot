@@ -37,8 +37,7 @@ else:
     port = 9999
     print("Using default values - {}:{}".format(host,port))
 
-if getattr(sys, 'frozen', False): frozen = False
-else: frozen = True
+frozen = getattr(sys, 'frozen', False)
 
 # Used by the Bruteforcer
 def product(*args, **kwds):
