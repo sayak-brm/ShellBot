@@ -65,7 +65,7 @@ import os, sys, urllib.request
 def getURL(owner, repo, name):
     import json
 
-    response = urllib.request.urlopen('https://api.github.com/repos/{}/{}/releases/latest'.format(owner,repo))
+    response = urllib.request.urlopen('https://api.github.com/repos/%s/%s/releases/latest'.%(owner, repo))
 
     json_val = json.loads(response.read().decode())
 
