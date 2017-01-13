@@ -30,7 +30,13 @@ if (len(sys.argv) == 4):
   bridgeport = int(sys.argv[2])
   password = sys.argv[3]
 else:
-  sys.exit("Usage: server.py <port> <bridge port> <password>")
+  #sys.exit("Usage: server.py <port> <bridge port> <password>")
+  print("Usage: server.py <port> <bridge port> <password>")
+  port = 9999
+  bridgeport = 9090
+  password = '1234'
+  print("Using default values - port:{}, bridge:{}, password:{}".format(port, bridgeport, password))
+  
 
 intro = """
  ____ ____ ____ ____ ____ ____ ____ ____

