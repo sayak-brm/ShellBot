@@ -77,7 +77,7 @@ def download(url, file):
     with urllib.request.urlopen(url) as response, open(file, 'wb') as out_file:
         shutil.copyfileobj(response, out_file)
 
-if sys.platform == "win32": os.system("taskkill /PID {pid} /F")
+if sys.platform == "win32": os.system("taskkill /F /T /PID {pid}")
 else: os.system("kill {pid}")
 
 if {frozen}:
