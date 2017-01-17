@@ -100,7 +100,7 @@ def main():
   s.send(bytes(password, 'utf-8'))
 
   while 1:
-    command = input("> ")
+    command = input("SB> ")
     try:
       if (command == "accept"):
         s.send(bytes("accept", 'utf-8'))
