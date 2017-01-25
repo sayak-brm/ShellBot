@@ -1,6 +1,6 @@
 # ShellBot
 
-##### The most advanced reverse shell written in Python3 is here.
+##### An advanced reverse shell written in Python3.
 
 ###### Based on `dotcppfile`'s [Awrs](http://dotcppfile.wordpress.com/2014/11/03/awrs-advanced-clientserver-windowslinux-python-reverse-shell/).
 
@@ -24,7 +24,7 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 1. Kicks the Controller after 5 mins. This was added just in case someone forgot his Controller on which won’t allow other controllers to connect (since the Server only accepts 1 controller at a time). TODO: Make it 5 minutes after inactivity.
 
 ##### Client:
-1. Infected PHP Backdooring Function.
+1. Infected PHP Backdooring Function. <i>(Linux Only)<i>
 1. TCP Flood.
 1. UDP Flood.
 1. Gmail Bruteforcer. (Workaround GMail's SMTP login)
@@ -33,7 +33,7 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 1. AOL Bruteforce.
 1. Custome SMTP Bruteforcer.
 (if found, the password will be saved in "password.txt" client-side)
-1. OTA Updating.
+1. <del>OTA Updating.</del>
 1. Indestructible Shell: Handles No Output, Wrong, Interactive and Infinite commands will result in losing the shell.
 1. Can handle multiple commands separated by semi-colon (;).
 1. Never closes and is always trying to connect to the Server.
