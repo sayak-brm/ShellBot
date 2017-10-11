@@ -27,7 +27,7 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 1. Infected PHP Backdooring Function. <i>(Linux Only)<i>
 1. TCP Flood.
 1. UDP Flood.
-1. Gmail Bruteforcer. (Workaround GMail's SMTP login)
+1. Gmail Bruteforcer. (Workaround Gmail's SMTP login)
 1. MS Live Bruteforcer.
 1. Yahoo Bruteforcer.
 1. AOL Bruteforce.

