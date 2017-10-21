@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import os
-import  sys
+import sys
 import urllib.request
 import tempfile
 import shutil
