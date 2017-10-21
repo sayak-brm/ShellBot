@@ -2,8 +2,6 @@
 
 ##### An advanced reverse shell written in Python3.
 
-###### Based on `dotcppfile`'s [Awrs](http://dotcppfile.wordpress.com/2014/11/03/awrs-advanced-clientserver-windowslinux-python-reverse-shell/).
-
 ---
 
 ShellBot is a cross-platform Remote Shell Suite where the Server can be managed by 1 Controller at a time.
@@ -31,10 +29,9 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 1. MS Live Bruteforcer.
 1. Yahoo Bruteforcer.
 1. AOL Bruteforce.
-1. Custome SMTP Bruteforcer.
-(if found, the password will be saved in "password.txt" client-side)
-1. <del>OTA Updating.</del>
-1. Indestructible Shell: Handles No Output, Wrong, Interactive and Infinite commands will result in losing the shell.
+1. Custome SMTP Bruteforcer. If found, the password will be saved as "password.txt" on the client.
+1. OTA Updating.
+1. Hardened Shell: Handles No Output, Wrong, Interactive and Infinite commands will result in losing the shell.
 1. Can handle multiple commands separated by semi-colon (;).
 1. Never closes and is always trying to connect to the Server.
 1. Can handle almost any non-interactive command properly.
