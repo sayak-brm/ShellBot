@@ -7,7 +7,7 @@ import shutil
 import json
 
 def getURL(owner, repo, name):
-    repoUrl = 'https://api.github.com/repos/{}/{}/releases/latest'\
+    repoUrl = 'https://api.github.com/repos/{{}}/{{}}/releases/latest'\
               .format(owner, repo)
     response = urllib.request.urlopen(repoUrl)
 

