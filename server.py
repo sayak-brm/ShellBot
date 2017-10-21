@@ -121,9 +121,9 @@ def main():
       try: command = q.recv(20480).decode()
       except Exception as ex: print('[SERVER] Error:', ex); break
 
-      if (command == "accept"):
+      if (command == "refresh"):
         getConnections()
-        if (sendController(bytes("[SERVER] Done Accepting\n", 'utf-8'), q) == 0): break
+        if (sendController(bytes("[SERVER] Connections Refreshed\n", 'utf-8'), q) == 0): break
 
       elif(command == "list"):
         temporary = ""
