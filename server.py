@@ -78,7 +78,7 @@ def quitClients():
             pass
 
     del allConnections[:]
-    del allAddresses[:] 
+    del allAddresses[:]
 #<--
 
 #Get Client Connections-->

