@@ -19,10 +19,10 @@ The ShellBot suite is designed in such a way that it will not stop till a connec
 ##### Server:
 1. Can handle multiple connections all at once.
 1. The Controller’s connection requires a plain text password, it’s not the best security, but at-least it is better than nothing. Will be improved on in future revisions.
-1. Kicks the Controller after 5 mins. This was added just in case someone forgot his Controller on which won’t allow other controllers to connect (since the Server only accepts 1 controller at a time). TODO: Make it 5 minutes after inactivity.
+1. Kicks the Controller after 5 mins. (As the Server only accepts 1 controller at a time). *TODO: Make it 5 minutes after inactivity.*
 
 ##### Client:
-1. Infected PHP Backdooring Function. <i>(Linux Only)<i>
+1. Infected PHP Backdooring Function. <i>(Linux Only)</i>
 1. TCP Flood.
 1. UDP Flood.
 1. Gmail Bruteforcer. (Workaround Gmail's SMTP login)
