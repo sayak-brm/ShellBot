@@ -48,3 +48,4 @@ Temporary Items
 client.exe
 client/client.spec
 client/client.ico
+*.pyc
