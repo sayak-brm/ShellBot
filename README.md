@@ -34,7 +34,7 @@ crash, the program automatically restarts.
 
 ##### Client:
 
-1. Infected PHP Backdooring Function. <i>(Linux Only)</i>
+1. Infected PHP Backdooring Function. *(Linux Only)*
 1. TCP Flood.
 1. UDP Flood.
 1. Gmail Bruteforcer. (Workaround Gmail's SMTP login)
