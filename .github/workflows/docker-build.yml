@@ -20,5 +20,5 @@ jobs:
         username: ${{ secrets.DOCKER_USER }}
         password: ${{ secrets.DOCKER_PASS }}
         repository: sayakbrm/shellbot-server
-        tags: latest,$(git log -1 --pretty=%!H)
+        tags: latest,$GITHUB_SHA
         path: ./server
