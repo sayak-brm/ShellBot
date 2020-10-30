@@ -2,7 +2,9 @@
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2Fsayak-brm%2FShellBot?ref=badge_shield)
 
-##### An advanced reverse shell written in Python3.
+##### This project may be deprecated soon!
+
+I am currently coding another reverse shell utility based on the principles of this project, and will replace this utility when completed. Find out more and contribute to the developement [here](https://github.com/sayak-brm/ShellBot2).
 
 ---
 
